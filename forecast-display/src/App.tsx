@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { queryWeatherForecast } from './data-processing/api-query'
+import { extractDailyForecastDescription, extractWeatherDataValue, filterDates, findHighLowTemps } from './data-processing/data-wrangling'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
@@ -18,7 +20,14 @@ function App() {
       </div>
       <h1>Vite + React</h1>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
+        <button onClick={async () => {
+          const periods = filterDates(await queryWeatherForecast("hourly"))
+          const map = extractWeatherDataValue(periods, "temperature")
+          console.log(map)
+          const highLowMap = findHighLowTemps(map)
+          console.log(highLowMap)
+          
+        }}>
           count is {count}
         </button>
         <p>
