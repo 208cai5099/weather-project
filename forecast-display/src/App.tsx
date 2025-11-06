@@ -1,43 +1,30 @@
 import { useState } from 'react'
 import { queryWeatherForecast } from './data-processing/api-query'
-import { extractDailyForecastDescription, extractWeatherDataValue, filterDates, findHighLowTemps } from './data-processing/data-wrangling'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { extractWeatherDataValue, filterDates, findHighLowTemps } from './data-processing/data-wrangling'
+import { fiveDayWeatherForecast, todayWeatherForecast, currentWeather } from './components/test-data'
+import { WeatherCard } from './components/weather-card'
 import './App.css'
+import { CurrentWeather } from './components/current-weather'
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className='entire-display'>
+      <div className='top-row'>
+        <CurrentWeather forecast={todayWeatherForecast} currentWeather={currentWeather}/>
+        <CurrentWeather forecast={todayWeatherForecast} currentWeather={currentWeather}/>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={async () => {
-          const periods = filterDates(await queryWeatherForecast("hourly"))
-          const map = extractWeatherDataValue(periods, "temperature")
-          console.log(map)
-          const highLowMap = findHighLowTemps(map)
-          console.log(highLowMap)
-          
-        }}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+      <div className="five-day-forecast-row">
+        {
+          fiveDayWeatherForecast.map((forecastObject, idx) => <WeatherCard forecast={forecastObject} key={`weather-card-${idx}`}/>)
+        }
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+    </div>
+
     </>
+
+
   )
 }
 
