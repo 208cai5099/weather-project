@@ -1,5 +1,4 @@
 import type { CurrentWeather, WeatherForecast } from "./types"
-import { WeatherCard } from "./weather-card"
 
 interface CurrentWeatherCardProps {
     forecast: WeatherForecast

@@ -6,9 +6,17 @@
 }
 
 .entire-display {
+  position: relative;
   height: 90vh;
   display: grid;
   grid-template-rows: 1fr 1fr;
+}
+
+.update-notice {
+  position: absolute;
+  font-size: 0.75em;
+  top: -40px;
+  right: -20px;
 }
 
 .top-row {
@@ -123,4 +131,60 @@
   position: absolute;
   width: 2em;
   transition: 0.3s;
+}
+
+.chart-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.weather-chart {
+  min-width: 350px;
+  max-width: 100%;
+  min-height: 200px;
+  max-height: 90%;
+}
+
+.weather-chart-menu {
+  display: flex;
+  flex-direction: row;
+  max-width: 50%;
+  max-height: 1em;
+}
+
+.weather-chart-menu > button {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+.temperature-button {
+  background-image: url("./assets/temperature.svg");
+}
+
+.temperature-button-clicked {
+  background-image: url("./assets/temperature.svg");
+  background-color: #EFE9E3;
+}
+
+.precipitation-button {
+  background-image: url("./assets/precipitation.svg");
+}
+
+.precipitation-button-clicked {
+  background-image: url("./assets/precipitation.svg");
+  background-color: #EFE9E3;
+}
+
+.wind-speed-button {
+  background-image: url("./assets/wind.svg");
+}
+
+.wind-speed-button-clicked {
+  background-image: url("./assets/wind.svg");
+  background-color: #EFE9E3;
 }

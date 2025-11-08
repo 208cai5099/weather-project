@@ -1,4 +1,4 @@
-import type { CurrentWeather, WeatherForecast } from "./types";
+import type { CurrentWeather, UpdateTimestamp, WeatherForecast } from "./types";
 import cloudyIcon from '../assets/cloudy.svg';
 import foggyIcon from '../assets/foggy.svg'
 import hailIcon from '../assets/hail.svg'
@@ -8,6 +8,23 @@ import snowyIcon from '../assets/snowy.svg'
 import sunnyIcon from '../assets/sunny.svg'
 import thunderstormIcon from '../assets/thunderstorm.svg'
 import umbrellaIcon from '../assets/umbrella.svg'
+
+export const windSpeedData: number[] = [8, 10, 7, 5, 10, 8, 6, 8, 12, 11, 10, 10]
+
+export const temperatureData: number[] = [87, 86, 85, 85, 84, 83, 82, 80, 79, 79, 77, 76]
+
+export const precipitationData: number[] = [7, 15, 25, 34, 30, 12, 17, 18, 90, 80, 60, 50]
+
+export const timeStamps: string[] = ["1PM", "2PM", "3PM", "4PM", "5PM", "6PM", "7PM", "8PM", "9PM", "10PM", "11PM", "12AM"]
+
+export const updateTime: UpdateTimestamp = {
+    year: 2025,
+    month: 11,
+    day: 2,
+    hour: 11,
+    minute: 3,
+    dayOrNight: "AM"
+}
 
 export const currentWeather: CurrentWeather = {
     city: "New York",
