@@ -1,5 +1,3 @@
-import { queryWeatherForecast } from './data-processing/api-query'
-import { extractWeatherDataValue, filterDates, findHighLowTemps } from './data-processing/data-wrangling'
 import { fiveDayWeatherForecast, todayWeatherForecast, currentWeather, updateTime } from './components/test-data'
 import { WeatherCard } from './components/weather-card'
 import './App.css'

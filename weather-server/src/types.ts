@@ -47,3 +47,20 @@ export interface WeatherForecast {
   };
 }
 
+export interface ForecastArrays {
+  timeArray: string[],
+  tempArray: (number | null)[],
+  windSpeedArray: (number | null)[],
+  precipitationProbArray: (number | null)[]
+}
+
+export interface ForecastEntry {
+  date: string,
+  dayOfWeek: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday",
+  forecastArrays: ForecastArrays,
+  lowTemp: number,
+  highTemp: number,
+  shortDaytimeForecast: string,
+  detailedDaytimeForecast: string
+}
+
