@@ -41,6 +41,7 @@ async function getWeatherForecasts(dayInterval: number = 5, timeZone: string = "
         }
     }
 
+    console.log(combinedForecasts[0])
     return combinedForecasts
 
 

@@ -76,6 +76,7 @@ export function parseHourlyForecasts(periods: WeatherPeriod[], timeZone: string 
         const recordDate = new Date(record["startTime"])
         const dayOfWeek = dayOfWeekMapper[recordDate.getDay()]
         const [date, time]  = dateTimeFormatter.format(recordDate).split(", ")
+        const formattedTime = time.replace("p.m.", "PM").replace("a.m.", "AM")
         const temperature = record["temperature"]
         const precipitation = record["probabilityOfPrecipitation"]["value"]
         const windSpeedRegexMatch = record["windSpeed"].match(/[\d]+/)
@@ -86,21 +87,17 @@ export function parseHourlyForecasts(periods: WeatherPeriod[], timeZone: string 
             weatherForecastArray.push({
                 date: date,
                 dayOfWeek: dayOfWeek,
-                forecastArrays: {
-                    timeArray: [time],
-                    tempArray: [temperature],
-                    precipitationProbArray: [precipitation],
-                    windSpeedArray: [windSpeed]
-                },
+                tempArray: [{[formattedTime] : temperature}],
+                precipitationArray: [{[formattedTime]: precipitation}],
+                windSpeedArray: [{[formattedTime]: windSpeed}],
                 lowTemp: temperature,
                 highTemp: temperature
             })
         } else {
             const entry = weatherForecastArray[forecastIndex] as Partial<ForecastEntry>
-            entry?.forecastArrays?.timeArray.push(time)
-            entry?.forecastArrays?.tempArray?.push(temperature)
-            entry?.forecastArrays?.precipitationProbArray?.push(precipitation)
-            entry?.forecastArrays?.windSpeedArray?.push(windSpeed)
+            entry.tempArray?.push({[formattedTime]: temperature})
+            entry.precipitationArray?.push({[formattedTime]: precipitation})
+            entry.windSpeedArray?.push({[formattedTime]: windSpeed})
             entry.lowTemp = Math.min(temperature, entry.lowTemp as number)
             entry.highTemp = Math.max(temperature, entry.highTemp as number)
             weatherForecastArray[forecastIndex] = entry
