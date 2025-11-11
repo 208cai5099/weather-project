@@ -50,12 +50,14 @@ export interface WeatherForecast {
 export interface ForecastEntry {
   date: string,
   dayOfWeek: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday",
-  tempArray: Record<string, number | null>[],
-  precipitationArray: Record<string, number | null>[],
-  windSpeedArray: Record<string, number | null>[],
+  hourlyTemp: Record<string, number | null>,
+  hourlyPrecipitation: Record<string, number | null>,
+  hourlyWindSpeed: Record<string, number | null>,
   lowTemp: number,
   highTemp: number,
   shortDaytimeForecast: string,
-  detailedDaytimeForecast: string
+  detailedDaytimeForecast: string,
+  shortNighttimeForecast: string,
+  detailedNighttimeForecast: string
 }
 

@@ -87,17 +87,17 @@ export function parseHourlyForecasts(periods: WeatherPeriod[], timeZone: string 
             weatherForecastArray.push({
                 date: date,
                 dayOfWeek: dayOfWeek,
-                tempArray: [{[formattedTime] : temperature}],
-                precipitationArray: [{[formattedTime]: precipitation}],
-                windSpeedArray: [{[formattedTime]: windSpeed}],
+                hourlyTemp: {[formattedTime] : temperature},
+                hourlyPrecipitation: {[formattedTime]: precipitation},
+                hourlyWindSpeed: {[formattedTime]: windSpeed},
                 lowTemp: temperature,
                 highTemp: temperature
             })
         } else {
             const entry = weatherForecastArray[forecastIndex] as Partial<ForecastEntry>
-            entry.tempArray?.push({[formattedTime]: temperature})
-            entry.precipitationArray?.push({[formattedTime]: precipitation})
-            entry.windSpeedArray?.push({[formattedTime]: windSpeed})
+            entry.hourlyTemp = {...entry.hourlyTemp, [formattedTime]: temperature}
+            entry.hourlyPrecipitation = {...entry.hourlyPrecipitation, [formattedTime]: precipitation}
+            entry.hourlyWindSpeed = {...entry.hourlyWindSpeed, [formattedTime]: windSpeed}
             entry.lowTemp = Math.min(temperature, entry.lowTemp as number)
             entry.highTemp = Math.max(temperature, entry.highTemp as number)
             weatherForecastArray[forecastIndex] = entry
@@ -120,17 +120,21 @@ export function parseHalfDayForecasts(periods: WeatherPeriod[]): Partial<Forecas
 
     const weatherForecastArray: Partial<ForecastEntry>[] = []
     periods.forEach((record) => {
+        console.log(record)
 
         if (record["isDaytime"]) {
-            const date = parseISODate(record["startTime"])
-            const shortForecast = record["shortForecast"]
-            const detailedForecast = record["detailedForecast"]
-
-            weatherForecastArray.push({
-                date: date,
-                shortDaytimeForecast: shortForecast,
-                detailedDaytimeForecast: detailedForecast
-            })
+            const weatherRecord: Record<string, string> = {
+                date: parseISODate(record["startTime"])
+            }
+            weatherRecord["shortDaytimeForecast"] = record["shortForecast"]
+            weatherRecord["detailedDaytimeForecast"] = record["detailedForecast"]
+            weatherForecastArray.push(weatherRecord)
+        } else {
+            const index = weatherForecastArray.findIndex((element) => element["date"] === parseISODate(record["startTime"]))
+            if (index !== -1) {
+                weatherForecastArray[index]["shortNighttimeForecast"] = record["shortForecast"]
+                weatherForecastArray[index]["detailedNighttimeForecast"] = record["detailedForecast"]
+            }
         }
         
     })

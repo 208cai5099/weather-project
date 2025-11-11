@@ -1,6 +1,7 @@
 import { queryWeatherForecast } from "./api-query.js";
 import { filterDates, parseHourlyForecasts, parseHalfDayForecasts } from "./data-wrangling.js"
 import { ForecastEntry } from "./types.js";
+import fs from "fs"
 
 async function getWeatherForecasts(dayInterval: number = 5, timeZone: string = "America/New_York"): Promise<Partial<ForecastEntry>[]> {
 
@@ -41,10 +42,16 @@ async function getWeatherForecasts(dayInterval: number = 5, timeZone: string = "
         }
     }
 
-    console.log(combinedForecasts[0])
     return combinedForecasts
 
 
 }
 
-getWeatherForecasts()
+const forecasts = await getWeatherForecasts()
+
+try {
+    fs.writeFileSync('test.json', JSON.stringify(forecasts, null, 4));
+    console.log('JSON data written to test.json');
+} catch (err) {
+    console.error('Error writing file:', err);
+}

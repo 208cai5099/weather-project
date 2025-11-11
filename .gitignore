@@ -1,0 +1,4 @@
+node_modules
+test.ts
+weather-db/__pycache__
+weather-db/.venv
