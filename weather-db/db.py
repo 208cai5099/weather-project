@@ -2,11 +2,24 @@ import sqlite3
 import json
 import os
 
+
 WEATHER_DB_SCHEMA = "weather_db_schema.json"
 WEATHER_DB_NAME = "weather.db"
 WEATHER_DB_HOURLY_TABLES = ["hourly_temperature", "hourly_precipitation", "hourly_wind_speed"]
 
+
 def create_table(db_cursor, table_name, columns):
+    """
+    Creates a table with the specified column specifications.
+
+    Args:
+        db_cursor (Cursor): Cursor for the SQLite database.
+        table_name (str): Name of the table.
+        columns (dict): A dict that maps each column name to its data type and constraints.
+
+    Returns:
+        None:       
+    """
     
     column_specs = []
     for column_name, constraints in columns.items():
@@ -16,12 +29,20 @@ def create_table(db_cursor, table_name, columns):
     query = f"CREATE TABLE IF NOT EXISTS {table_name} ({column_specs});"
     db_cursor.execute(query)
 
-def db_setup(db_name, schema_file):
+
+def db_setup(schema_file_path, db_name=WEATHER_DB_NAME):
+    """
+    Creates a SQLite database using the provided JSON schema file.
+
+    Args:
+        schema_file_path (str): Path to the JSON file containing the table schemas.
+        db_name (str): Name of the database.
+    """
 
     db_con = sqlite3.connect(db_name)
     db_cur = db_con.cursor()
 
-    with open(schema_file, "r") as file:
+    with open(schema_file_path, "r") as file:
         all_schema = json.load(file)
 
         for table_name, columns in all_schema.items():
@@ -30,22 +51,89 @@ def db_setup(db_name, schema_file):
     db_con.commit()
     db_con.close()
 
-if not os.path.isfile(WEATHER_DB_NAME):
-    db_setup(WEATHER_DB_NAME, WEATHER_DB_SCHEMA)
 
+def delete_table(table_name, db_name=WEATHER_DB_NAME):
+    """
+    Deletes a table from the database.
 
-def delete_table(db_name, table_name):
+    Args:
+        table_name (str): Name of the table to be deleted.
+        db_name (str): Name of the database.
+    """
     
     db_con = sqlite3.connect(db_name)
     db_cur = db_con.cursor()
-    db_cur.execute(f"DROP TABLE IF EXISTS {table_name}")
+    db_cur.execute(f"DROP TABLE IF EXISTS {table_name};")
     db_con.commit()
     db_con.close()
 
-def update_forecast(new_forecast):
-    pass
 
-def insert_forecast(db_name, new_forecast):
+def update_forecast(new_forecast, db_name=WEATHER_DB_NAME):
+    """
+    Updates the database with the details from the new forecast.
+
+    Args:
+        new_forecast (dict): A JSON-like object that contains new details of the forecast for a specific day.
+        db_name (str): Name of the database.
+    """
+
+    date = new_forecast["date"]
+    day_of_week = new_forecast["dayOfWeek"]
+    location = new_forecast["location"]
+    low_temp = new_forecast["lowTemp"]
+    high_temp = new_forecast["highTemp"]
+    short_daytime_forecast = new_forecast["shortDaytimeForecast"]
+    detailed_daytime_forecast = new_forecast["detailedDaytimeForecast"]
+    short_nighttime_forecast = new_forecast["shortNighttimeForecast"]
+    detailed_nighttime_forecast = new_forecast["detailedNighttimeForecast"]
+    
+    db_con = sqlite3.connect(db_name)
+    db_cur = db_con.cursor()
+
+    ## update the high-level forecast information
+    summary_query = (
+        "UPDATE forecast_summary\n"
+        f"SET location='{location}', date='{date}', day_of_week='{day_of_week}', low_temp={low_temp}, high_temp={high_temp}, "
+        f"short_daytime_forecast='{short_daytime_forecast}', detailed_daytime_forecast='{detailed_daytime_forecast}', "
+        f"short_nighttime_forecast='{short_nighttime_forecast}', detailed_nighttime_forecast='{detailed_nighttime_forecast}'\n"
+        f"WHERE location='{location}' AND date='{date}';"
+    )
+
+    db_cur.execute(summary_query)
+
+    ## update the hourly temperature, precipitation, and wind speed data
+    for hourly_type in ["hourlyTemp", "hourlyPrecipitation", "hourlyWindSpeed"]:
+
+        hourly_data = new_forecast[hourly_type]
+
+        if hourly_type == "hourlyTemp":
+            table_name = "hourly_temperature"
+        elif hourly_type == "hourlyPrecipitation":
+            table_name = "hourly_precipitation"
+        else:
+            table_name = "hourly_wind_speed"
+
+        for time, value in hourly_data.items():
+            query = (
+                f"UPDATE {table_name}\n"
+                f"SET value={value}\n"
+                f"WHERE location='{location}' AND date='{date}' AND time='{time}'"
+            )
+
+            db_cur.execute(query)
+
+    db_con.commit()
+    db_con.close()
+
+
+def insert_forecast(new_forecast, db_name=WEATHER_DB_NAME):
+    """
+    Creates a new entry in the database's tables for the new forecast.
+
+    Args:
+        new_forecast (dict): A JSON-like object containing forecast details for a specific day.
+        db_name (str): Name of the database.
+    """
 
     date = new_forecast["date"]
     day_of_week = new_forecast["dayOfWeek"]
@@ -63,6 +151,7 @@ def insert_forecast(db_name, new_forecast):
     db_con = sqlite3.connect(db_name)
     db_cur = db_con.cursor()
 
+    ## insert an entry of high-level forecast info
     summary_query = (
         "INSERT INTO forecast_summary (location, date, day_of_week, low_temp, high_temp, "
         "short_daytime_forecast, detailed_daytime_forecast, short_nighttime_forecast, detailed_nighttime_forecast)\n"
@@ -70,12 +159,15 @@ def insert_forecast(db_name, new_forecast):
     )
     db_cur.execute(summary_query)
 
+    ## insert the hourly temperature forecast readings
     temp_data = [f"('{location}', '{date}', '{time}', {value})" for time, value in hourly_temp.items()]
     db_cur.execute(f"INSERT INTO hourly_temperature (location, date, time, value)\nVALUES {",\n".join(temp_data)};")
 
+    ## insert the hourly precipitation forecast readings
     precipitation_data = [f"('{location}', '{date}', '{time}', {value})" for time, value in hourly_precipitation.items()]
     db_cur.execute(f"INSERT INTO hourly_precipitation (location, date, time, value)\nVALUES {",\n".join(precipitation_data)};")
 
+    ## insert the hourly wind speed forecast readings
     wind_speed_data = [f"('{location}', '{date}', '{time}', {value})" for time, value in hourly_wind_speed.items()]
     db_cur.execute(f"INSERT INTO hourly_wind_speed (location, date, time, value)\nVALUES {",\n".join(wind_speed_data)};")
 
@@ -83,15 +175,23 @@ def insert_forecast(db_name, new_forecast):
     db_con.close()
 
 
-def forecast_entry_already_exists(db_name, date, location):
+def forecast_entry_already_exists(date, location, db_name=WEATHER_DB_NAME):
+    """
+    Checks whether a forecast is available for the given date and location.
+
+    Args:
+        date (str): Date of forecast.
+        location (str): Location of forecast.
+        db_name (str): Name of the database.
+    """
 
     db_con = sqlite3.connect(db_name)
     db_cur = db_con.cursor()
 
     query = (
         f"SELECT date, location\n"
-        f"FROM forecast_summary\n"
-        f"WHERE date = '{date}' AND location = '{location}'"
+        f"FROM forecast_summary \n"
+        f"WHERE date = '{date}' AND location = '{location}';"
     )
 
     res = db_cur.execute(query)
@@ -100,22 +200,38 @@ def forecast_entry_already_exists(db_name, date, location):
 
     db_con.close()
 
-    print(output)
     return output
 
-def load_new_forecast(new_forecast):
+
+def add_new_forecast(new_forecast, db_name=WEATHER_DB_NAME):
+    """
+    Adds the forecast info to the database.
+
+    Args:
+        new_forecast (dict): A JSON-like object containing forecast details for a specific day.
+        db_name (str): Name of the database.
+    """
 
     date = new_forecast["date"]
     location = new_forecast["location"]
 
-    if forecast_entry_already_exists(date, location):
-        update_forecast(new_forecast)
+    if forecast_entry_already_exists(date, location, db_name):
+        update_forecast(new_forecast, db_name)
     else:
-        insert_forecast(new_forecast)
+        insert_forecast(new_forecast, db_name)
 
-def query_forecast(db_name, date, location):
 
-    if forecast_entry_already_exists(db_name, date, location):
+def query_forecast(date, location, db_name=WEATHER_DB_NAME):
+    """
+    Queries the database for forecast information from a specific date and location.
+
+    Args:
+        date (str): Date of the forecast.
+        location (str): Location of the forecast.
+        db_name (str): Name of the database.
+    """
+
+    if forecast_entry_already_exists(date, location, db_name):
 
         forecast_output = {}
 
@@ -164,103 +280,6 @@ def query_forecast(db_name, date, location):
 
         return forecast_output
 
-# test = {
-#         "location": "New York",
-#         "date": "2025-11-12",
-#         "dayOfWeek": "Wednesday",
-#         "hourlyTemp": {
-#             "00:00": 37,
-#             "01:00": 36,
-#             "02:00": 36,
-#             "03:00": 35,
-#             "04:00": 36,
-#             "05:00": 36,
-#             "06:00": 36,
-#             "07:00": 37,
-#             "08:00": 40,
-#             "09:00": 43,
-#             "10:00": 46,
-#             "11:00": 48,
-#             "12:00": 50,
-#             "13:00": 50,
-#             "14:00": 51,
-#             "15:00": 50,
-#             "16:00": 50,
-#             "17:00": 50,
-#             "18:00": 49,
-#             "19:00": 49,
-#             "20:00": 48,
-#             "21:00": 48,
-#             "22:00": 47,
-#             "23:00": 46
-#         },
-#         "hourlyPrecipitation": {
-#             "00:00": 1,
-#             "01:00": 10,
-#             "02:00": 10,
-#             "03:00": 10,
-#             "04:00": 10,
-#             "05:00": 10,
-#             "06:00": 10,
-#             "07:00": 7,
-#             "08:00": 7,
-#             "09:00": 7,
-#             "10:00": 7,
-#             "11:00": 7,
-#             "12:00": 7,
-#             "13:00": 7,
-#             "14:00": 7,
-#             "15:00": 7,
-#             "16:00": 7,
-#             "17:00": 7,
-#             "18:00": 7,
-#             "19:00": 1,
-#             "20:00": 1,
-#             "21:00": 1,
-#             "22:00": 1,
-#             "23:00": 1
-#         },
-#         "hourlyWindSpeed": {
-#             "00:00": 15,
-#             "01:00": 14,
-#             "02:00": 14,
-#             "03:00": 13,
-#             "04:00": 13,
-#             "05:00": 12,
-#             "06:00": 12,
-#             "07:00": 12,
-#             "08:00": 13,
-#             "09:00": 14,
-#             "10:00": 15,
-#             "11:00": 15,
-#             "12:00": 16,
-#             "13:00": 16,
-#             "14:00": 15,
-#             "15:00": 15,
-#             "16:00": 15,
-#             "17:00": 14,
-#             "18:00": 14,
-#             "19:00": 14,
-#             "20:00": 13,
-#             "21:00": 13,
-#             "22:00": 14,
-#             "23:00": 13
-#         },
-#         "lowTemp": 35,
-#         "highTemp": 51,
-#         "shortDaytimeForecast": "Partly Sunny",
-#         "detailedDaytimeForecast": "Partly sunny, with a high near 51. Southwest wind 12 to 16 mph, with gusts as high as 26 mph.",
-#         "shortNighttimeForecast": "Partly Cloudy",
-#         "detailedNighttimeForecast": "Partly cloudy, with a low around 40. West wind around 14 mph."
-#     }
 
-# insert_forecast(WEATHER_DB_NAME, test)
-# print(query_forecast(WEATHER_DB_NAME, "2025-11-12", "New York"))
-
-# con = sqlite3.connect(WEATHER_DB_NAME)
-# cur = con.cursor()
-
-# res = cur.execute("SELECT * FROM forecast_summary")
-# print(res.fetchall())
-
-# con.close()
+if not os.path.isfile(WEATHER_DB_NAME):
+    db_setup(WEATHER_DB_SCHEMA, WEATHER_DB_NAME)
