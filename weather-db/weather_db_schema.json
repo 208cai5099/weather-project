@@ -1,0 +1,35 @@
+{
+    "forecast_summary" : {
+        "id" : "INTEGER PRIMARY KEY AUTOINCREMENT",
+        "location" : "TEXT NOT NULL",
+        "date" : "TEXT NOT NULL",
+        "day_of_week" : "TEXT NOT NULL",
+        "low_temp" : "INTEGER",
+        "high_temp" : "INTEGER",
+        "short_daytime_forecast" : "TEXT",
+        "detailed_daytime_forecast" : "TEXT",
+        "short_nighttime_forecast" : "TEXT",
+        "detailed_nighttime_forecast" : "TEXT"
+    },
+    "hourly_temperature" : {
+        "id" : "INTEGER PRIMARY KEY AUTOINCREMENT",
+        "location" : "TEXT NOT NULL",
+        "date" : "TEXT NOT NULL",
+        "time" : "TEXT NOT NULL",
+        "value" : "INTEGER"
+    },
+    "hourly_precipitation" : {
+        "id" : "INTEGER PRIMARY KEY AUTOINCREMENT",
+        "location" : "TEXT NOT NULL",
+        "date" : "TEXT NOT NULL",
+        "time" : "TEXT NOT NULL",
+        "value" : "INTEGER"
+    },
+    "hourly_wind_speed" : {
+        "id" : "INTEGER PRIMARY KEY AUTOINCREMENT",
+        "location" : "TEXT NOT NULL",
+        "date" : "TEXT NOT NULL",
+        "time" : "TEXT NOT NULL",
+        "value" : "INTEGER"
+    }
+}

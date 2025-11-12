@@ -53,9 +53,9 @@ export function parseHourlyForecasts(periods: WeatherPeriod[], timeZone: string 
         year: "numeric", 
         month: "2-digit", 
         day: "2-digit", 
-        hour: "numeric", 
-        minute: "numeric",
-        hour12: true,
+        hour: "2-digit", 
+        minute: "2-digit",
+        hour12: false,
         timeZone: timeZone
     }
     const dateTimeFormatter = new Intl.DateTimeFormat("en-CA", DateTimeFormatOptions)
@@ -85,6 +85,7 @@ export function parseHourlyForecasts(periods: WeatherPeriod[], timeZone: string 
         const forecastIndex = weatherForecastArray.findIndex((forecast) => forecast.date === date)
         if (forecastIndex === -1) {
             weatherForecastArray.push({
+                location: "New York",
                 date: date,
                 dayOfWeek: dayOfWeek,
                 hourlyTemp: {[formattedTime] : temperature},
@@ -120,11 +121,11 @@ export function parseHalfDayForecasts(periods: WeatherPeriod[]): Partial<Forecas
 
     const weatherForecastArray: Partial<ForecastEntry>[] = []
     periods.forEach((record) => {
-        console.log(record)
 
         if (record["isDaytime"]) {
-            const weatherRecord: Record<string, string> = {
-                date: parseISODate(record["startTime"])
+            const weatherRecord: Partial<ForecastEntry> = {
+                date: parseISODate(record["startTime"]),
+                location: "New York"
             }
             weatherRecord["shortDaytimeForecast"] = record["shortForecast"]
             weatherRecord["detailedDaytimeForecast"] = record["detailedForecast"]

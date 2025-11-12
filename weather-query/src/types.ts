@@ -48,6 +48,7 @@ export interface WeatherForecast {
 }
 
 export interface ForecastEntry {
+  location: string,
   date: string,
   dayOfWeek: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday",
   hourlyTemp: Record<string, number | null>,
