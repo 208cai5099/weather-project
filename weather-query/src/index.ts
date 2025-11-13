@@ -1,15 +1,18 @@
-import { getWeatherDescriptors } from "./data-processing.js";
+import { getWeatherDescriptors } from "./data-processing.js"
 import { getWeatherForecasts } from "./data-query.js"
-import { ForecastEntry } from "./types.js";
+import { ForecastEntry } from "./types.js"
+import dotenv from "dotenv"
 
 
-const DATABASE_LOAD_ENDPOINT = "http://0.0.0.0:8000/load/"
+dotenv.config()
 
 
 async function sendToDatabase(forecastEntryArray: Partial<ForecastEntry>[]) {
 
+    const endpoint = process.env.DATABASE_LOAD_ENDPOINT as string
+
     try {
-        const res = await fetch(DATABASE_LOAD_ENDPOINT,
+        const res = await fetch(endpoint,
             {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },

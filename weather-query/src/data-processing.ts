@@ -1,21 +1,22 @@
 import { ForecastEntry } from "./types.js"
 import fs from "fs/promises"
+import dotenv from 'dotenv'
 
+dotenv.config()
 
-const OLLAMA_GENERATE_ENDPOINT = "http://127.0.0.1:11434/api/generate"
-const OLLAMA_EMBEDDING_ENDPOINT = "http://127.0.0.1:11434/api/embed"
 const WEATHER_DESCRIPTORS = ["Partly Cloudy", "Mostly Cloudy", "Cloudy", "Partly Clear", "Mostly Clear", "Clear", "Partly Sunny", "Mostly Sunny", "Sunny", "Fog", "Hail", "Rain", "Snow", "Thunderstorm", "Windy"]
 const LLM_MODEL_NAME = "gemma3:1b"
 const EMBEDDING_MODEL_NAME = "mxbai-embed-large:335m"
-const EMBEDDING_FILE_PATH = "descriptor_embeddings.json"
 const EMBEDDING_DIMENSIONS = 700
 
 
 async function callGenerateAPI(systemMessage: string, promptMessage: string) {
 
+    const endpoint = process.env.OLLAMA_GENERATE_ENDPOINT as string
+
     try {
     
-        const res = await fetch(OLLAMA_GENERATE_ENDPOINT,
+        const res = await fetch(endpoint,
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -46,8 +47,10 @@ async function callGenerateAPI(systemMessage: string, promptMessage: string) {
 
 async function callEmbeddingAPI(textForEmbedding: string) {
 
+    const endpoint = process.env.OLLAMA_EMBEDDING_ENDPOINT as string
+
     try {
-        const res = await fetch(OLLAMA_EMBEDDING_ENDPOINT, 
+        const res = await fetch(endpoint, 
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -77,8 +80,10 @@ async function setDescriptorEmbeddings() {
         allEmbeddings[descriptor] = embedding
     }
 
+    const embeddingFilepath = process.env.EMBEDDING_FILEPATH as string
+
     try {
-        await fs.writeFile(EMBEDDING_FILE_PATH, JSON.stringify(allEmbeddings, null, 4))
+        await fs.writeFile(embeddingFilepath, JSON.stringify(allEmbeddings, null, 4))
     } catch (error) {
         console.log(error)
     }
@@ -87,8 +92,10 @@ async function setDescriptorEmbeddings() {
 
 async function getDescriptorEmbeddings() {
 
+    const embeddingFilepath = process.env.EMBEDDING_FILEPATH as string
+
     try {
-        const res = await fs.readFile(EMBEDDING_FILE_PATH, "utf-8")
+        const res = await fs.readFile(embeddingFilepath, "utf-8")
         return JSON.parse(res) as Record<string, number[]>
     } catch (error) {
         console.log(error)
@@ -155,7 +162,8 @@ export async function getWeatherDescriptors(forecast: Partial<ForecastEntry> ) {
         // check if the embeddings for the available descriptors are already made
         // if not already made, create them
         try {
-            await fs.access(EMBEDDING_FILE_PATH)
+            const embeddingFilepath = process.env.EMBEDDING_FILEPATH as string
+            await fs.access(embeddingFilepath)
         } catch (error) {
             await setDescriptorEmbeddings()
         }
