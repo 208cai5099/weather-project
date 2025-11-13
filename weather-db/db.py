@@ -47,6 +47,7 @@ def db_setup(schema_file_path, db_name=WEATHER_DB_NAME):
             create_table(db_cur, table_name, columns)
     
     db_con.commit()
+    db_cur.close()
     db_con.close()
 
 
@@ -63,6 +64,7 @@ def delete_table(table_name, db_name=WEATHER_DB_NAME):
     db_cur = db_con.cursor()
     db_cur.execute(f"DROP TABLE IF EXISTS {table_name};")
     db_con.commit()
+    db_cur.close()
     db_con.close()
 
 
@@ -138,6 +140,7 @@ def update_forecast(new_forecast, db_name=WEATHER_DB_NAME):
                 db_cur.execute(query)
 
     db_con.commit()
+    db_cur.close()
     db_con.close()
 
 
@@ -192,6 +195,7 @@ def insert_forecast(new_forecast, db_name=WEATHER_DB_NAME):
     db_cur.execute(f"INSERT INTO hourly_wind_speed (location, date, time, value)\nVALUES {",\n".join(wind_speed_data)};")
 
     db_con.commit()
+    db_cur.close()
     db_con.close()
 
 
@@ -220,6 +224,7 @@ def forecast_entry_already_exists(date, location, db_name=WEATHER_DB_NAME):
 
     output = False if res.fetchone() is None else True
 
+    db_cur.close()
     db_con.close()
 
     return output
@@ -305,6 +310,7 @@ def query_forecast(date, location, db_name=WEATHER_DB_NAME):
                 forecast_output[table_name][hour] = data_point
 
         db_con.commit()
+        db_cur.close()
         db_con.close()
 
         return forecast_output

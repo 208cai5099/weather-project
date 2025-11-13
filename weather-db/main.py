@@ -48,11 +48,11 @@ async def get_forecasts(query_inputs: List[QueryInput]):
 @app.put("/load/")
 async def load_forecasts(new_forecasts: List[ForecastEntry]):
     
-    # try:
+    try:
         success_count = 0
         for forecast in new_forecasts:
             add_new_forecast(dict(forecast))
             success_count += 1
         return {"message": f"Successfully saved {success_count} of {len(new_forecasts)} new forecasts"}
-    # except:
-    #     return {"message": "Internal failure"}
+    except:
+        return {"message": "Internal failure"}
