@@ -11,6 +11,13 @@
         "short_nighttime_forecast" : "TEXT",
         "detailed_nighttime_forecast" : "TEXT"
     },
+    "hourly_forecast": {
+        "id" : "INTEGER PRIMARY KEY AUTOINCREMENT",
+        "location" : "TEXT NOT NULL",
+        "date" : "TEXT NOT NULL",
+        "time" : "TEXT NOT NULL",
+        "forecast" : "TEXT NOT NULL"
+    },
     "hourly_temperature" : {
         "id" : "INTEGER PRIMARY KEY AUTOINCREMENT",
         "location" : "TEXT NOT NULL",

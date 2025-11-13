@@ -1,7 +1,5 @@
 import sqlite3
 import json
-import os
-
 
 WEATHER_DB_SCHEMA = "weather_db_schema.json"
 WEATHER_DB_NAME = "weather.db"
@@ -101,26 +99,43 @@ def update_forecast(new_forecast, db_name=WEATHER_DB_NAME):
 
     db_cur.execute(summary_query)
 
-    ## update the hourly temperature, precipitation, and wind speed data
-    for hourly_type in ["hourlyTemp", "hourlyPrecipitation", "hourlyWindSpeed"]:
+    ## update the hourly forecast, temperature, precipitation, and wind speed data
+    for hourly_type in ["hourlyForecast", "hourlyTemp", "hourlyPrecipitation", "hourlyWindSpeed"]:
 
         hourly_data = new_forecast[hourly_type]
 
-        if hourly_type == "hourlyTemp":
-            table_name = "hourly_temperature"
-        elif hourly_type == "hourlyPrecipitation":
-            table_name = "hourly_precipitation"
+        if hourly_type == "hourlyForecast":
+
+            table_name = "hourly_forecast"
+
+            for time, forecast in hourly_data.items():
+
+                query = (
+                    f"UPDATE {table_name}\n"
+                    f"SET forecast='{forecast}'\n"
+                    f"WHERE location='{location}' AND date='{date}' AND time='{time}'"
+                )
+
+                db_cur.execute(query)
+
         else:
-            table_name = "hourly_wind_speed"
 
-        for time, value in hourly_data.items():
-            query = (
-                f"UPDATE {table_name}\n"
-                f"SET value={value}\n"
-                f"WHERE location='{location}' AND date='{date}' AND time='{time}'"
-            )
+            if hourly_type == "hourlyTemp":
+                table_name = "hourly_temperature"
+            elif hourly_type == "hourlyPrecipitation":
+                table_name = "hourly_precipitation"
+            else:
+                table_name = "hourly_wind_speed"
 
-            db_cur.execute(query)
+            for time, value in hourly_data.items():
+                
+                query = (
+                    f"UPDATE {table_name}\n"
+                    f"SET value={value}\n"
+                    f"WHERE location='{location}' AND date='{date}' AND time='{time}'"
+                )
+
+                db_cur.execute(query)
 
     db_con.commit()
     db_con.close()
@@ -138,6 +153,7 @@ def insert_forecast(new_forecast, db_name=WEATHER_DB_NAME):
     date = new_forecast["date"]
     day_of_week = new_forecast["dayOfWeek"]
     location = new_forecast["location"]
+    hourly_forecast = new_forecast["hourlyForecast"]
     hourly_temp = new_forecast["hourlyTemp"]
     hourly_precipitation = new_forecast["hourlyPrecipitation"]
     hourly_wind_speed = new_forecast["hourlyWindSpeed"]
@@ -158,6 +174,10 @@ def insert_forecast(new_forecast, db_name=WEATHER_DB_NAME):
         f"VALUES ('{location}', '{date}', '{day_of_week}', {low_temp}, {high_temp}, '{short_daytime_forecast}', '{detailed_daytime_forecast}', '{short_nighttime_forecast}', '{detailed_nighttime_forecast}');"
     )
     db_cur.execute(summary_query)
+
+    ## insert the hourly forecast predictions
+    forecast_data = [f"('{location}', '{date}', '{time}', '{forecast}')" for time, forecast in hourly_forecast.items()]
+    db_cur.execute(f"INSERT INTO hourly_forecast (location, date, time, forecast)\nVALUES {",\n".join(forecast_data)};")
 
     ## insert the hourly temperature forecast readings
     temp_data = [f"('{location}', '{date}', '{time}', {value})" for time, value in hourly_temp.items()]
@@ -190,9 +210,11 @@ def forecast_entry_already_exists(date, location, db_name=WEATHER_DB_NAME):
 
     query = (
         f"SELECT date, location\n"
-        f"FROM forecast_summary \n"
+        f"FROM forecast_summary\n"
         f"WHERE date = '{date}' AND location = '{location}';"
     )
+
+    print(query)
 
     res = db_cur.execute(query)
 
@@ -257,29 +279,32 @@ def query_forecast(date, location, db_name=WEATHER_DB_NAME):
         forecast_output["short_nighttime_forecast"] = summary[5]
         forecast_output["detailed_nighttime_forecast"] = summary[6]
 
-        for hourly_table in ["temperature", "precipitation", "wind_speed"]:
+        for hourly_table in ["forecast", "temperature", "precipitation", "wind_speed"]:
 
             table_name = "hourly_" + hourly_table
 
             forecast_output[table_name] = {}
 
-            hourly_query = (
-                f"SELECT time, value\n"
-                f"FROM {table_name}\n"
-                f"WHERE date='{date}' AND location='{location}'"
-            )
+            if hourly_table == "forecast":
+                hourly_query = (
+                    f"SELECT time, forecast\n"
+                    f"FROM {table_name}\n"
+                    f"WHERE date='{date}' AND location='{location}'"
+                )                
+            else:
+                hourly_query = (
+                    f"SELECT time, value\n"
+                    f"FROM {table_name}\n"
+                    f"WHERE date='{date}' AND location='{location}'"
+                )
 
             hourly_data = db_cur.execute(hourly_query)
             hourly_data = hourly_data.fetchall()
 
-            for hour, value in hourly_data:
-                forecast_output[table_name][hour] = value
+            for hour, data_point in hourly_data:
+                forecast_output[table_name][hour] = data_point
 
         db_con.commit()
         db_con.close()
 
         return forecast_output
-
-
-if not os.path.isfile(WEATHER_DB_NAME):
-    db_setup(WEATHER_DB_SCHEMA, WEATHER_DB_NAME)

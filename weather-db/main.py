@@ -1,8 +1,11 @@
 from pydantic import BaseModel
 from typing import Literal, Dict, List, Union
 from fastapi import FastAPI
-from db import query_forecast, add_new_forecast
+import os
+from db import query_forecast, add_new_forecast, db_setup, WEATHER_DB_NAME, WEATHER_DB_SCHEMA
 
+if not os.path.isfile(WEATHER_DB_NAME):
+    db_setup(WEATHER_DB_SCHEMA, WEATHER_DB_NAME)
 
 class QueryInput(BaseModel):
     location: str
@@ -12,6 +15,7 @@ class ForecastEntry(BaseModel):
     location: str
     date: str
     dayOfWeek: Literal["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    hourlyForecast: Dict[str, str]
     hourlyTemp: Dict[str, Union[int, None]]
     hourlyPrecipitation: Dict[str, Union[int, None]]
     hourlyWindSpeed: Dict[str, Union[int, None]]
@@ -44,11 +48,11 @@ async def get_forecasts(query_inputs: List[QueryInput]):
 @app.put("/load/")
 async def load_forecasts(new_forecasts: List[ForecastEntry]):
     
-    try:
+    # try:
         success_count = 0
         for forecast in new_forecasts:
             add_new_forecast(dict(forecast))
             success_count += 1
         return {"message": f"Successfully saved {success_count} of {len(new_forecasts)} new forecasts"}
-    except:
-        return {"message": "internal failure"}
+    # except:
+    #     return {"message": "Internal failure"}

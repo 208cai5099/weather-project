@@ -51,6 +51,7 @@ export interface ForecastEntry {
   location: string,
   date: string,
   dayOfWeek: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday",
+  hourlyForecast: Record<string, string>,
   hourlyTemp: Record<string, number | null>,
   hourlyPrecipitation: Record<string, number | null>,
   hourlyWindSpeed: Record<string, number | null>,
@@ -59,6 +60,8 @@ export interface ForecastEntry {
   shortDaytimeForecast: string,
   detailedDaytimeForecast: string,
   shortNighttimeForecast: string,
-  detailedNighttimeForecast: string
+  detailedNighttimeForecast: string,
+  daytimeWeatherDescriptor: string,
+  nighttimeWeatherDescriptor: string
 }
 
