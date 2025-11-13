@@ -218,8 +218,6 @@ def forecast_entry_already_exists(date, location, db_name=WEATHER_DB_NAME):
         f"WHERE date = '{date}' AND location = '{location}';"
     )
 
-    print(query)
-
     res = db_cur.execute(query)
 
     output = False if res.fetchone() is None else True

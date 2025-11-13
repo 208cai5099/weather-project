@@ -6,54 +6,66 @@ const OLLAMA_GENERATE_ENDPOINT = "http://127.0.0.1:11434/api/generate"
 const OLLAMA_EMBEDDING_ENDPOINT = "http://127.0.0.1:11434/api/embed"
 const WEATHER_DESCRIPTORS = ["Partly Cloudy", "Mostly Cloudy", "Cloudy", "Partly Clear", "Mostly Clear", "Clear", "Partly Sunny", "Mostly Sunny", "Sunny", "Fog", "Hail", "Rain", "Snow", "Thunderstorm", "Windy"]
 const LLM_MODEL_NAME = "gemma3:1b"
-const EMBEDDING_MODEL_NAME = "mxbai-embed-large:latest"
+const EMBEDDING_MODEL_NAME = "mxbai-embed-large:335m"
 const EMBEDDING_FILE_PATH = "descriptor_embeddings.json"
 const EMBEDDING_DIMENSIONS = 700
 
 
 async function callGenerateAPI(systemMessage: string, promptMessage: string) {
 
-    const res = await fetch(OLLAMA_GENERATE_ENDPOINT,
-        {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                model: LLM_MODEL_NAME,
-                system: systemMessage,
-                prompt: promptMessage,
-                stream: false,
-                think: false,
-                options: {
-                    seed: 2,
-                    temperature: 0.0,
-                    top_p: 0.9
-                }
-            })
+    try {
+    
+        const res = await fetch(OLLAMA_GENERATE_ENDPOINT,
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: LLM_MODEL_NAME,
+                    system: systemMessage,
+                    prompt: promptMessage,
+                    stream: false,
+                    think: false,
+                    options: {
+                        seed: 2,
+                        temperature: 0.0,
+                        top_p: 0.9
+                    }
+                })
 
-        }
-    )
+            }
+        )
 
-    const resJSON = await res.json()
-    return resJSON.response
+        const resJSON = await res.json()
+        return resJSON.response
+        
+    } catch (error) {
+        console.log(error)
+    }
 
 }
 
 async function callEmbeddingAPI(textForEmbedding: string) {
 
-    const res = await fetch(OLLAMA_EMBEDDING_ENDPOINT, 
-        {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                model: EMBEDDING_MODEL_NAME,
-                input: textForEmbedding,
-                dimensions: EMBEDDING_DIMENSIONS
-            })
-        }
-    )
+    try {
+        const res = await fetch(OLLAMA_EMBEDDING_ENDPOINT, 
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: EMBEDDING_MODEL_NAME,
+                    input: textForEmbedding,
+                    dimensions: EMBEDDING_DIMENSIONS
+                })
+            }
+        )
 
-    const resJSON = await res.json()
-    return resJSON.embeddings[0]
+        const resJSON = await res.json()
+        return resJSON.embeddings[0]
+        
+    } catch (error) {
+        console.log(error)
+    }
+
 
 }
 

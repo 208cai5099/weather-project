@@ -3,3 +3,5 @@ test.ts
 weather-db/__pycache__
 weather-db/.venv
 .DS_Store
+weather-db/weather.db
+weather-query/dist

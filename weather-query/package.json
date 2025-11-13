@@ -1,5 +1,5 @@
 {
-  "name": "weather-server",
+  "name": "weather-query",
   "version": "1.0.0",
   "description": "A TypeScript project for querying weather data",
   "main": "dist/index.js",
