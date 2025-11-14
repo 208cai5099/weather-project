@@ -6,3 +6,4 @@ weather-db/.venv
 weather-db/weather.db
 weather-query/dist
 weather-query/.env
+weather-display/.env
