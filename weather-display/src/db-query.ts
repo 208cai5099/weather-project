@@ -2,7 +2,7 @@ import dotenv from "dotenv"
 
 dotenv.config()
 
-export async function queryWeatherDB(dayInterval: number = 5, timeZone: string = "America/New_York") {
+export async function queryWeatherDB(dayInterval: number = 5, location: string = "New York", timeZone: string = "America/New_York") {
 
     const dateFormatOptions: Intl.DateTimeFormatOptions = {
         year: "numeric",
@@ -19,16 +19,22 @@ export async function queryWeatherDB(dayInterval: number = 5, timeZone: string =
         dateInterval.push(dateFormatter.format(targetDate))
     }
 
+    // append the date and location parameters to the database endpoint
     const endpoint = process.env.WEATHER_DB_ENDPOINT as string
+    const queryParams = new URLSearchParams()
+    for (const date of dateInterval) {
+        queryParams.append("dates", date)
+        queryParams.append("locations", location)
+    }
+
+    console.log(`${endpoint}?${queryParams.toString()}`)
 
     try {
 
         const res = await fetch(
-            endpoint,
+            `${endpoint}?${queryParams.toString()}`,
             {
-                method: "GET",
-                headers: {"Content-Type" : "application/json"},
-                body: JSON.stringify(dateInterval)
+                method: "GET"            
             }
         )
 
