@@ -1,6 +1,6 @@
 from pydantic import BaseModel
-from typing import Literal, Dict, List, Union
-from fastapi import FastAPI
+from typing import Literal, Dict, List, Union, Annotated
+from fastapi import FastAPI, Query
 import os
 from db import query_forecast, add_new_forecast, db_setup, WEATHER_DB_NAME, WEATHER_DB_SCHEMA
 
@@ -29,18 +29,20 @@ class ForecastEntry(BaseModel):
 app = FastAPI()
 
 @app.get("/query/")
-async def get_forecasts(query_inputs: List[QueryInput]):
+async def get_forecasts(dates: Annotated[List[str] | None, Query()] = None, locations: Annotated[List[str] | None, Query()] = None):
 
     try:
-        output_forecasts = []
 
-        for args in query_inputs:
-            location = args.location
-            date = args.date
+        output_forecasts = []
+        query_inputs = zip(dates, locations)
+        
+        for date, location in query_inputs:
+
             forecast = query_forecast(date, location)
             output_forecasts.append(forecast)
         
         return output_forecasts
+    
     except:
         return {"message": "failure"}
 

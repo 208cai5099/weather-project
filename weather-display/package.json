@@ -1,5 +1,5 @@
 {
-  "name": "forecast-display",
+  "name": "weather-display",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "chart.js": "^4.5.1",
+    "dotenv": "^17.2.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
