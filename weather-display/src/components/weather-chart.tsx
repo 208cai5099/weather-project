@@ -68,7 +68,10 @@ export function WeatherChart({weatherChartData} : WeatherChartProps) {
                             display: false
                         },
                         ticks: {
-                            color: CHART_TEXT_COLOR
+                            color: CHART_TEXT_COLOR,
+                            font: {
+                                size: 10
+                            }
                         }
                     },
                     y: {
