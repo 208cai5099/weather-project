@@ -146,15 +146,22 @@ export async function getWeatherDescriptors(forecast: Partial<ForecastEntry> ) {
     Description: Mostly sunny. High near 52, with temperatures falling to around 49 in the afternoon. West wind 13 to 17 mph, with gusts as high as 29 mph.\n
     `
 
-    // call LLM API to generate descriptors for daytime and nighttime weather
-    const daytimePrompt = promptTemplate.replace("weather_title", shortDaytimeForecast).replace("weather_description", detailedDaytimeForecast).replace("time_of_day", "Daytime")
-    const daytimeDescriptor = await callGenerateAPI(systemMessage, daytimePrompt)
-    const nighttimePrompt = promptTemplate.replace("weather_title", shortNighttimeForecast).replace("weather_description", detailedNighttimeForecast).replace("time_of_day", "Nighttime")
-    const nighttimeDescriptor = await callGenerateAPI(systemMessage, nighttimePrompt)
+    forecast["daytimeWeatherDescriptor"] = ""
+    forecast["nighttimeWeatherDescriptor"] = ""
 
-    forecast["daytimeWeatherDescriptor"] = daytimeDescriptor
-    forecast["nighttimeWeatherDescriptor"] = nighttimeDescriptor
-    
+    // call LLM API to generate descriptors for daytime and nighttime weather
+    if (shortDaytimeForecast !== "" && detailedDaytimeForecast !== "") {
+        const daytimePrompt = promptTemplate.replace("weather_title", shortDaytimeForecast).replace("weather_description", detailedDaytimeForecast).replace("time_of_day", "Daytime")
+        const daytimeDescriptor = await callGenerateAPI(systemMessage, daytimePrompt)
+        forecast["daytimeWeatherDescriptor"] = daytimeDescriptor
+    }
+
+    if (shortNighttimeForecast !== "" && detailedNighttimeForecast !== "") {
+        const nighttimePrompt = promptTemplate.replace("weather_title", shortNighttimeForecast).replace("weather_description", detailedNighttimeForecast).replace("time_of_day", "Nighttime")
+        const nighttimeDescriptor = await callGenerateAPI(systemMessage, nighttimePrompt)
+        forecast["nighttimeWeatherDescriptor"] = nighttimeDescriptor
+    }  
+
     try {
 
         let newHourlyDescriptors: Record<string, string> = {}

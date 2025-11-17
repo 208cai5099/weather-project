@@ -1,20 +1,13 @@
-export interface UpdateTimestamp {
-    year: number,
-    month: number,
-    day: number,
-    hour: number,
-    minute: number,
-    dayOrNight: "AM" | "PM"
-}
-
-export type chartDataType = "temperature" | "precipitation" | "wind-speed"
+export type chartDataType = "temperature" | "precipitation" | "windSpeed"
 
 export interface CurrentWeather {
-    city: string,
-    state: string,
+    location: string,
     temperature: number | null,
     precipitationProb: number | null,
-    windSpeed: number | null
+    windSpeed: number | null,
+    forecast: string,
+    svgPath: string,
+    needUmbrella: string | null
 }
 
 export interface WeatherForecast {
@@ -22,16 +15,44 @@ export interface WeatherForecast {
     dayOfWeek: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday",
     lowTemp: number | null,
     highTemp: number | null,
-    shortForecast: string,
-    svgPath: string,
-    needUmbrella: string | null
+    daytimeForecast: {
+        forecast: string,
+        svgPath: string,
+        needUmbrella: string | null
+    },
+    nighttimeForecast: {
+        forecast: string,
+        svgPath: string,
+        needUmbrella: string | null
+    }
+}
+
+export interface SingleChartData {
+    label: "Temperature (°F)" | "Precipitation %" | "Wind Speed (mph)",
+    xValues: string[],
+    yValues: (number | null)[],
+    unit: "°F" | "%" | "mph"
 }
 
 export interface WeatherChartData {
-    label: "Temperature (°F)" | "Precipitation %" | "Wind Speed (mph)",
-    x_values: string[],
-    y_values: number[],
-    unit: "°F" | "%" | "mph"
+    temperature: {
+        label: "Temperature (°F)",
+        xValues: string[],
+        yValues: (number | null)[],
+        unit: "°F"
+    },
+    precipitation: {
+        label: "Precipitation %",
+        xValues: string[],
+        yValues: (number | null)[],
+        unit: "%"
+    },
+    windSpeed: {
+        label: "Wind Speed (mph)",
+        xValues: string[],
+        yValues: (number | null)[],
+        unit: "mph"
+    }
 }
 
 export interface ForecastEntry {
@@ -39,16 +60,16 @@ export interface ForecastEntry {
   date: string,
   dayOfWeek: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday",
   hourlyForecast: Record<string, string>,
-  hourlyTemp: Record<string, number | null>,
+  hourlyTemperature: Record<string, number | null>,
   hourlyPrecipitation: Record<string, number | null>,
   hourlyWindSpeed: Record<string, number | null>,
   lowTemp: number,
   highTemp: number,
   shortDaytimeForecast: string,
   detailedDaytimeForecast: string,
+  daytimeWeatherDescriptor: string,
   shortNighttimeForecast: string,
   detailedNighttimeForecast: string,
-  daytimeWeatherDescriptor: string,
   nighttimeWeatherDescriptor: string
 }
 

@@ -12,7 +12,7 @@ export function WeatherChartMenu({dataType, updateDataType}: WeatherChartMenuPro
         <div className="weather-chart-menu">
             <button value="temperature" className={dataType === "temperature" ? "temperature-button-clicked" : "temperature-button"} onClick={updateDataType}></button>
             <button value="precipitation" className={dataType === "precipitation" ? "precipitation-button-clicked" : "precipitation-button"} onClick={updateDataType}></button>
-            <button value="wind-speed" className={dataType === "wind-speed" ? "wind-speed-button-clicked" : "wind-speed-button"} onClick={updateDataType}></button>
+            <button value="windSpeed" className={dataType === "windSpeed" ? "wind-speed-button-clicked" : "wind-speed-button"} onClick={updateDataType}></button>
         </div>
     )
 }

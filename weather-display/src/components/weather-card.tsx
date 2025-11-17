@@ -6,6 +6,8 @@ interface WeatherCardProps {
 
 export function WeatherCard({forecast}: WeatherCardProps) {
 
+    const daytimeForecast = forecast["daytimeForecast"]
+
     return (
         <div className="weather-card">
             <p className="weather-card-day">
@@ -13,8 +15,8 @@ export function WeatherCard({forecast}: WeatherCardProps) {
             </p>
 
             <div className="weather-picture">
-                <img src={forecast["svgPath"]} className="forecast-icon" alt="weather forecast icon" />
-                {forecast["needUmbrella"] === null ? <div/> : <img src={forecast["needUmbrella"]} className="umbrella-icon" alt="umbrella icon"/>}
+                <img src={daytimeForecast["svgPath"]} className="forecast-icon" alt="weather forecast icon" />
+                {daytimeForecast["needUmbrella"] === null ? <div/> : <img src={daytimeForecast["needUmbrella"]} className="umbrella-icon" alt="umbrella icon"/>}
             </div>
             
             <p>
@@ -22,7 +24,7 @@ export function WeatherCard({forecast}: WeatherCardProps) {
             </p>
             
             <p>
-                {forecast["shortForecast"]}
+                {daytimeForecast["forecast"]}
             </p>
         </div>
     )

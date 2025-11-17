@@ -181,10 +181,10 @@
 }
 
 .wind-speed-button {
-  background-image: url("./assets/wind.svg");
+  background-image: url("./assets/wind_speed.svg");
 }
 
 .wind-speed-button-clicked {
-  background-image: url("./assets/wind.svg");
+  background-image: url("./assets/wind_speed.svg");
   background-color: #EFE9E3;
 }

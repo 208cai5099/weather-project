@@ -9,7 +9,9 @@
         "short_daytime_forecast" : "TEXT",
         "detailed_daytime_forecast" : "TEXT",
         "short_nighttime_forecast" : "TEXT",
-        "detailed_nighttime_forecast" : "TEXT"
+        "detailed_nighttime_forecast" : "TEXT",
+        "daytime_weather_descriptor" : "TEXT",
+        "nighttime_weather_descriptor" : "TEXT"
     },
     "hourly_forecast": {
         "id" : "INTEGER PRIMARY KEY AUTOINCREMENT",

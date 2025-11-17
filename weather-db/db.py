@@ -86,20 +86,40 @@ def update_forecast(new_forecast, db_name=WEATHER_DB_NAME):
     detailed_daytime_forecast = new_forecast["detailedDaytimeForecast"]
     short_nighttime_forecast = new_forecast["shortNighttimeForecast"]
     detailed_nighttime_forecast = new_forecast["detailedNighttimeForecast"]
+    daytime_weather_descriptor = new_forecast["daytimeWeatherDescriptor"]
+    nighttime_weather_descriptor = new_forecast["nighttimeWeatherDescriptor"]
     
     db_con = sqlite3.connect(db_name)
     db_cur = db_con.cursor()
 
     ## update the high-level forecast information
-    summary_query = (
+    query = (
         "UPDATE forecast_summary\n"
-        f"SET location='{location}', date='{date}', day_of_week='{day_of_week}', low_temp={low_temp}, high_temp={high_temp}, "
-        f"short_daytime_forecast='{short_daytime_forecast}', detailed_daytime_forecast='{detailed_daytime_forecast}', "
-        f"short_nighttime_forecast='{short_nighttime_forecast}', detailed_nighttime_forecast='{detailed_nighttime_forecast}'\n"
+        f"SET location='{location}', date='{date}', day_of_week='{day_of_week}', low_temp={low_temp}, high_temp={high_temp}\n"
         f"WHERE location='{location}' AND date='{date}';"
     )
 
-    db_cur.execute(summary_query)
+    db_cur.execute(query)
+    
+    if detailed_daytime_forecast != "" and short_daytime_forecast != "" and daytime_weather_descriptor != "":
+
+        query = (
+            "UPDATE forecast_summary\n"
+            f"SET short_daytime_forecast='{short_daytime_forecast}', detailed_daytime_forecast='{detailed_daytime_forecast}', daytime_weather_descriptor='{daytime_weather_descriptor}'\n"
+            f"WHERE location='{location}' AND date='{date}';"
+        )
+
+        db_cur.execute(query)
+    
+    if detailed_nighttime_forecast != "" and short_nighttime_forecast != "" and nighttime_weather_descriptor != "":
+
+        query = (
+            "UPDATE forecast_summary\n"
+            f"SET short_nighttime_forecast='{short_nighttime_forecast}', detailed_nighttime_forecast='{detailed_nighttime_forecast}', nighttime_weather_descriptor='{nighttime_weather_descriptor}'\n"
+            f"WHERE location='{location}' AND date='{date}';"
+        )
+
+        db_cur.execute(query)
 
     ## update the hourly forecast, temperature, precipitation, and wind speed data
     for hourly_type in ["hourlyForecast", "hourlyTemp", "hourlyPrecipitation", "hourlyWindSpeed"]:
@@ -115,7 +135,7 @@ def update_forecast(new_forecast, db_name=WEATHER_DB_NAME):
                 query = (
                     f"UPDATE {table_name}\n"
                     f"SET forecast='{forecast}'\n"
-                    f"WHERE location='{location}' AND date='{date}' AND time='{time}'"
+                    f"WHERE location='{location}' AND date='{date}' AND time='{time}';"
                 )
 
                 db_cur.execute(query)
@@ -166,6 +186,8 @@ def insert_forecast(new_forecast, db_name=WEATHER_DB_NAME):
     detailed_daytime_forecast = new_forecast["detailedDaytimeForecast"]
     short_nighttime_forecast = new_forecast["shortNighttimeForecast"]
     detailed_nighttime_forecast = new_forecast["detailedNighttimeForecast"]
+    daytime_weather_descriptor = new_forecast["daytimeWeatherDescriptor"]
+    nighttime_weather_descriptor = new_forecast["nighttimeWeatherDescriptor"]
     
     db_con = sqlite3.connect(db_name)
     db_cur = db_con.cursor()
@@ -173,8 +195,10 @@ def insert_forecast(new_forecast, db_name=WEATHER_DB_NAME):
     ## insert an entry of high-level forecast info
     summary_query = (
         "INSERT INTO forecast_summary (location, date, day_of_week, low_temp, high_temp, "
-        "short_daytime_forecast, detailed_daytime_forecast, short_nighttime_forecast, detailed_nighttime_forecast)\n"
-        f"VALUES ('{location}', '{date}', '{day_of_week}', {low_temp}, {high_temp}, '{short_daytime_forecast}', '{detailed_daytime_forecast}', '{short_nighttime_forecast}', '{detailed_nighttime_forecast}');"
+        "short_daytime_forecast, detailed_daytime_forecast, short_nighttime_forecast, detailed_nighttime_forecast, "
+        "daytime_weather_descriptor, nighttime_weather_descriptor)\n"
+        f"VALUES ('{location}', '{date}', '{day_of_week}', {low_temp}, {high_temp}, '{short_daytime_forecast}', '{detailed_daytime_forecast}', "
+        f"'{short_nighttime_forecast}', '{detailed_nighttime_forecast}', '{daytime_weather_descriptor}', '{nighttime_weather_descriptor}');"
     )
     db_cur.execute(summary_query)
 
@@ -265,28 +289,28 @@ def query_forecast(date, location, db_name=WEATHER_DB_NAME):
 
         summary_query = (
             "SELECT day_of_week, low_temp, high_temp, short_daytime_forecast, detailed_daytime_forecast, "
-            "short_nighttime_forecast, detailed_nighttime_forecast\n"
+            "short_nighttime_forecast, detailed_nighttime_forecast, daytime_weather_descriptor, nighttime_weather_descriptor\n"
             "FROM forecast_summary\n"
-            f"WHERE date='{date}' AND location='{location}'"
+            f"WHERE date='{date}' AND location='{location}';"
         )
         
         summary = db_cur.execute(summary_query)
         summary = summary.fetchone()
         forecast_output["location"] = location
         forecast_output["date"] = date
-        forecast_output["day_of_week"] = summary[0]
-        forecast_output["low_temp"] = summary[1]
-        forecast_output["high_temp"] = summary[2]
-        forecast_output["short_daytime_forecast"] = summary[3]
-        forecast_output["detailed_daytime_forecast"] = summary[4]
-        forecast_output["short_nighttime_forecast"] = summary[5]
-        forecast_output["detailed_nighttime_forecast"] = summary[6]
+        forecast_output["dayOfWeek"] = summary[0]
+        forecast_output["lowTemp"] = summary[1]
+        forecast_output["highTemp"] = summary[2]
+        forecast_output["shortDaytimeForecast"] = summary[3]
+        forecast_output["detailedDaytimeForecast"] = summary[4]
+        forecast_output["shortNighttimeForecast"] = summary[5]
+        forecast_output["detailedNighttimeForecast"] = summary[6]
+        forecast_output["daytimeWeatherDescriptor"] = summary[7]
+        forecast_output["nighttimeWeatherDescriptor"] = summary[8]
 
         for hourly_table in ["forecast", "temperature", "precipitation", "wind_speed"]:
 
             table_name = "hourly_" + hourly_table
-
-            forecast_output[table_name] = {}
 
             if hourly_table == "forecast":
                 hourly_query = (
@@ -304,8 +328,20 @@ def query_forecast(date, location, db_name=WEATHER_DB_NAME):
             hourly_data = db_cur.execute(hourly_query)
             hourly_data = hourly_data.fetchall()
 
+            if hourly_table == "forecast":
+                key_name = "hourlyForecast"
+            elif hourly_table == "temperature":
+                key_name = "hourlyTemperature"
+            elif hourly_table == "precipitation":
+                key_name = "hourlyPrecipitation"
+            elif hourly_table == "wind_speed":
+                key_name = "hourlyWindSpeed"
+
             for hour, data_point in hourly_data:
-                forecast_output[table_name][hour] = data_point
+                if forecast_output.get(key_name) is None:
+                    forecast_output[key_name] = {f"{hour}" : data_point}
+                else:
+                    forecast_output[key_name][hour] = data_point
 
         db_con.commit()
         db_cur.close()

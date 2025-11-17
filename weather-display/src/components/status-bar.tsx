@@ -1,5 +1,3 @@
-import type { UpdateTimestamp } from "./types"
-
 interface StatusBarProps {
     isFetching: boolean
     isError: boolean
