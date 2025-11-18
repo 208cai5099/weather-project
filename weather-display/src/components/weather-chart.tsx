@@ -1,4 +1,4 @@
-import { Chart, CategoryScale, LinearScale, BarController, BarElement, Tooltip, type ChartConfiguration, type ChartData, type ChartOptions } from 'chart.js/auto'
+import { Chart, CategoryScale, LinearScale, BarController, BarElement, Tooltip, type ChartConfiguration, type ChartData, type ChartOptions } from 'chart.js'
 import { useRef, useEffect } from 'react'
 import type { SingleChartData } from './types'
 
