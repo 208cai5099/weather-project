@@ -161,6 +161,25 @@ export function parseCurrentWeather(forecastEntry: ForecastEntry) {
 }
 
 /**
+ * Converts a given time from military time format to AM/PM format
+ * @returns 
+ */
+function formatHour(time: string) {
+    
+    const hour = parseInt(time.split(":")[0])
+
+    if (hour === 0) {
+        return "12AM"
+    } else if (hour == 12) {
+        return "12PM"
+    } else {
+        return hour < 12 ? `${hour % 12}AM` : `${hour % 12}PM`
+    }
+    
+
+}
+
+/**
  * Parses a ForecastEntry object for the hourly temperature, precipitation probability, 
  * and wind speed (used for chart visualization)
  * @returns A WeatherChartData object with the hourly weather details
@@ -174,19 +193,19 @@ export function parseHourlyData(forecastEntry: ForecastEntry) {
     const weatherData: WeatherChartData = {
         temperature: {
             label: "Temperature (°F)",
-            xValues: Object.keys(hourlyTemp),
+            xValues: Object.keys(hourlyTemp).map(time => formatHour(time)),
             yValues: Object.values(hourlyTemp),
             unit: "°F"
         },
         precipitation: {
             label: "Precipitation %",
-            xValues: Object.keys(hourlyPrecipitation),
+            xValues: Object.keys(hourlyPrecipitation).map(time => formatHour(time)),
             yValues: Object.values(hourlyPrecipitation),
             unit: "%"
         },
         windSpeed: {
             label: "Wind Speed (mph)",
-            xValues: Object.keys(hourlyWindSpeed),
+            xValues: Object.keys(hourlyWindSpeed).map(time => formatHour(time)),
             yValues: Object.values(hourlyWindSpeed),
             unit: "mph"
         }

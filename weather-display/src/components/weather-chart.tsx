@@ -1,6 +1,14 @@
-import { Chart, type ChartConfiguration, type ChartData, type ChartOptions } from 'chart.js'
+import { Chart, CategoryScale, LinearScale, BarController, BarElement, Tooltip, type ChartConfiguration, type ChartData, type ChartOptions } from 'chart.js/auto'
 import { useRef, useEffect } from 'react'
 import type { SingleChartData } from './types'
+
+Chart.register(
+    CategoryScale,
+    LinearScale,
+    BarController,
+    BarElement,
+    Tooltip
+)
 
 const TEMPERATURE_BAR_COLOR = "#F4991A"
 const PRECIPITATION_BAR_COLOR = "#3396D3"
