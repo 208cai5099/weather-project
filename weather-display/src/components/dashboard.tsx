@@ -1,5 +1,4 @@
 import { WeatherCard } from './weather-card'
-import '../App.css'
 import { CurrentWeatherInfo } from './current-weather-info'
 import { WeatherGraph } from './weather-graph'
 import { StatusBar } from './status-bar'
