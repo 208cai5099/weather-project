@@ -5,6 +5,9 @@ interface WeatherChartMenuProps {
     updateDataType: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
 }
 
+/**
+ * A button-based menu for switching bewteen displaying temperature, precipitation probability, or wind speed
+ */
 export function WeatherChartMenu({dataType, updateDataType}: WeatherChartMenuProps) {
 
     return (

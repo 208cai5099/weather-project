@@ -11,6 +11,9 @@ interface WeatherChartProps {
     selectedChartData: SingleChartData
 }
 
+/**
+ * A chart showing the hourly temperature, precipitation probability, or wind speed
+ */
 export function WeatherChart({selectedChartData} : WeatherChartProps) {
 
     const chartRef = useRef<Chart>(null)
@@ -57,7 +60,7 @@ export function WeatherChart({selectedChartData} : WeatherChartProps) {
                         callbacks: {
                             label: (tooltipItem) => {
                                 const unit = selectedChartData["unit"]
-                                return `${tooltipItem.parsed.y?.toString()} ${unit}`
+                                return `${tooltipItem.parsed.y?.toString()}${unit}`
                             }
                         }
                     }

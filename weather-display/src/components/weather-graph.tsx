@@ -7,6 +7,9 @@ interface WeatherGraphProps {
     allChartData: WeatherChartData | null
 }
 
+/**
+ * Displays the menu and chart of hourly temperature, precipitation probability, or wind speed
+ */
 export function WeatherGraph({allChartData}: WeatherGraphProps) {
 
 

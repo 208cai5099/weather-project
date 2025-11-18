@@ -4,6 +4,9 @@ interface WeatherCardProps {
     forecast: WeatherForecast
 }
 
+/**
+ * A card that displays the date, predicted daytime weather, and low/high temp
+ */
 export function WeatherCard({forecast}: WeatherCardProps) {
 
     const daytimeForecast = forecast["daytimeForecast"]

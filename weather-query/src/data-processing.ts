@@ -9,7 +9,10 @@ const LLM_MODEL_NAME = "gemma3:1b"
 const EMBEDDING_MODEL_NAME = "mxbai-embed-large:335m"
 const EMBEDDING_DIMENSIONS = 700
 
-
+/**
+ * Calls on a LLM to summarize the given weather details
+ * @returns A Promise of one of the descriptors in WEATHER_DESCRIPTORS
+ */
 async function callGenerateAPI(systemMessage: string, promptMessage: string) {
 
     const endpoint = process.env.OLLAMA_GENERATE_ENDPOINT as string
@@ -37,7 +40,7 @@ async function callGenerateAPI(systemMessage: string, promptMessage: string) {
         )
 
         const resJSON = await res.json()
-        return resJSON.response
+        return resJSON.response as string
         
     } catch (error) {
         console.log(error)
@@ -45,6 +48,10 @@ async function callGenerateAPI(systemMessage: string, promptMessage: string) {
 
 }
 
+/**
+ * Calls a vector embedding model to encode the given text
+ * @returns A Promise of a vector embedding
+ */
 async function callEmbeddingAPI(textForEmbedding: string) {
 
     const endpoint = process.env.OLLAMA_EMBEDDING_ENDPOINT as string
@@ -63,7 +70,7 @@ async function callEmbeddingAPI(textForEmbedding: string) {
         )
 
         const resJSON = await res.json()
-        return resJSON.embeddings[0]
+        return resJSON.embeddings[0] as number[]
         
     } catch (error) {
         console.log(error)
@@ -72,12 +79,18 @@ async function callEmbeddingAPI(textForEmbedding: string) {
 
 }
 
+/**
+ * Encode all the descriptors in WEATHER_DESCRIPTORS as vector embeddings
+ * @returns A Promise of void
+ */
 async function setDescriptorEmbeddings() {
 
     const allEmbeddings: Record<string, number[]> = {}
     for (const descriptor of WEATHER_DESCRIPTORS) {
         const embedding = await callEmbeddingAPI(descriptor)
-        allEmbeddings[descriptor] = embedding
+        if (embedding) {
+            allEmbeddings[descriptor] = embedding
+        }
     }
 
     const embeddingFilepath = process.env.EMBEDDING_FILEPATH as string
@@ -90,6 +103,10 @@ async function setDescriptorEmbeddings() {
 
 }
 
+/**
+ * Reads the file containing the vector embeddings of each descriptor in WEATHER_DESCRIPTORS
+ * @returns A Promise of a JSON object in which each descriptor is assigned to its embedding
+ */
 async function getDescriptorEmbeddings() {
 
     const embeddingFilepath = process.env.EMBEDDING_FILEPATH as string
@@ -103,6 +120,10 @@ async function getDescriptorEmbeddings() {
 
 }
 
+/**
+ * Calculates the cosine similarity score between two vector embeddings
+ * @returns The cosine similarity score
+ */
 function calculateCosineSimilarity(vectorA: number[], vectorB: number[]) {
 
     // calculate the dot product
@@ -119,7 +140,11 @@ function calculateCosineSimilarity(vectorA: number[], vectorB: number[]) {
 
 }
 
-
+/**
+ * Parses the daytime and nighttime weather forecasts to pick the most appropriate weather descriptor for them.
+ * Repeats the process for the hourly forecasts
+ * @returns A Promise of a ForecastEntry object with a day's weather details
+ */
 export async function getWeatherDescriptors(forecast: Partial<ForecastEntry> ) {
 
     const shortDaytimeForecast = forecast["shortDaytimeForecast"] as string
@@ -185,18 +210,23 @@ export async function getWeatherDescriptors(forecast: Partial<ForecastEntry> ) {
                 // create an embedding for the current descriptor
                 const currentEmbedding = await callEmbeddingAPI(currentDescriptor)
 
-                // use cosine similarity to find closest match to available descriptors
-                let closestDescriptor = ""
-                let bestScore = -Infinity
-                for (const [newDescriptor, newEmbedding] of Object.entries(availableEmbeddings)) {
-                    const cosineSimilarity = calculateCosineSimilarity(currentEmbedding, newEmbedding)
-                    if (cosineSimilarity > bestScore) {
-                        bestScore = cosineSimilarity
-                        closestDescriptor = newDescriptor
+                if (currentEmbedding) {
+
+                    // use cosine similarity to find closest match to available descriptors
+                    let closestDescriptor = ""
+                    let bestScore = -Infinity
+                    for (const [newDescriptor, newEmbedding] of Object.entries(availableEmbeddings)) {
+                        const cosineSimilarity = calculateCosineSimilarity(currentEmbedding, newEmbedding)
+                        if (cosineSimilarity > bestScore) {
+                            bestScore = cosineSimilarity
+                            closestDescriptor = newDescriptor
+                        }
                     }
+
+                    newHourlyDescriptors = {...newHourlyDescriptors, [hour]: closestDescriptor}
+
                 }
 
-                newHourlyDescriptors = {...newHourlyDescriptors, [hour]: closestDescriptor}
             }
 
         }
@@ -207,7 +237,7 @@ export async function getWeatherDescriptors(forecast: Partial<ForecastEntry> ) {
         console.log(error)
     }
 
-    return forecast
+    return forecast as ForecastEntry
 
 }
 

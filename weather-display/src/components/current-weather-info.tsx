@@ -5,6 +5,9 @@ interface CurrentWeatherCardProps {
     currentWeather: CurrentWeather | null
 }
 
+/**
+ * Displays the weather in the current hour of day
+ */
 export function CurrentWeatherInfo({forecast, currentWeather}: CurrentWeatherCardProps) {
 
     if (forecast && currentWeather) {
@@ -43,7 +46,7 @@ export function CurrentWeatherInfo({forecast, currentWeather}: CurrentWeatherCar
 
                     <p>
                         {`Precpitation: ${currentWeather["precipitationProb"]}%`}<br/>
-                        {`Wind Speed: ${currentWeather["windSpeed"]} mph`}<br/>
+                        {`Wind Speed: ${currentWeather["windSpeed"]}mph`}<br/>
                     </p>
 
                 </div>

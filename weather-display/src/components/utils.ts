@@ -13,6 +13,10 @@ import umbrellaIcon from '../assets/umbrella.svg'
 import clearNighttimeIcon from '../assets/clear_nighttime.svg'
 import partlyClearNighttimeIcon from '../assets/partly_clear_nighttime.svg'
 
+/**
+ * Fetches weather data within the provided time range, location, and time zone
+ * @returns An array of ForecastEntry (each one contains a single day's data)
+ */
 export async function queryWeatherDB(dayInterval: number, location: string, timeZone: string) {
 
     const dateFormatOptions: Intl.DateTimeFormatOptions = {
@@ -49,7 +53,7 @@ export async function queryWeatherDB(dayInterval: number, location: string, time
 
         const resJSON = await res.json()
 
-        return resJSON
+        return resJSON as ForecastEntry[]
         
     } catch (error) {
         console.log(error)
@@ -57,6 +61,10 @@ export async function queryWeatherDB(dayInterval: number, location: string, time
 
 }
 
+/**
+ * Determines the SVG that best corresponds to the given weather descriptor
+ * @returns The string representing the SVG
+ */
 function determineSVG(descriptor: string) {
 
     if (descriptor.includes("fog")) {
@@ -93,12 +101,20 @@ function determineSVG(descriptor: string) {
 
 }
 
+/**
+ * Determines whether an umbrella is needed based on the given weather descriptor
+ * @returns Either a string representing the umbrella SVG or null
+ */
 function determineUmbrella(descriptor: string) {
     if (descriptor.includes("rain") || descriptor.includes("thunderstorm")) return umbrellaIcon
     return null
 }
 
-
+/**
+ * Re-formats the data in a given ForecastEntry object for display
+ * in one of the 5-day Weather Cards
+ * @returns A WeatherForecast object representing a single day's forecast info
+ */
 export function parseWeatherForecast(forecastEntry: ForecastEntry) {
 
     const weatherForecast: Partial<WeatherForecast> = {}
@@ -121,6 +137,10 @@ export function parseWeatherForecast(forecastEntry: ForecastEntry) {
 
 }
 
+/**
+ * Parses a ForecastEntry object for the current hour's weather info
+ * @returns A CurrentWeather object showing the weather in the current hour
+ */
 export function parseCurrentWeather(forecastEntry: ForecastEntry) {
 
     let currentHour = new Date().getHours().toString() + ":00"
@@ -140,6 +160,11 @@ export function parseCurrentWeather(forecastEntry: ForecastEntry) {
     return currentWeather as CurrentWeather
 }
 
+/**
+ * Parses a ForecastEntry object for the hourly temperature, precipitation probability, 
+ * and wind speed (used for chart visualization)
+ * @returns A WeatherChartData object with the hourly weather details
+ */
 export function parseHourlyData(forecastEntry: ForecastEntry) {
 
     const hourlyTemp = forecastEntry["hourlyTemperature"]

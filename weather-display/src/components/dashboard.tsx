@@ -13,6 +13,9 @@ const DEFAULT_DAYS = 5
 const DEFAULT_LOCATION = "New York"
 const DEFAULT_TIMEZONE = "America/New_York"
 
+/**
+ * Displays the entire weather dashboard
+ */
 export function Dashboard() {
 
     const [currentWeather, setCurrentWeather] = useState<CurrentWeather | null>(null)
@@ -27,7 +30,6 @@ export function Dashboard() {
             if (!forecastData) {
                 throw new Error("Failed to fetch forecast data from database.")
             }
-            console.log(forecastData)
 
             return forecastData as ForecastEntry[]
         },

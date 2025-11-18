@@ -42,7 +42,7 @@ app.add_middleware(
 @app.get("/query/")
 async def get_forecasts(dates: Annotated[List[str] | None, Query()] = None, locations: Annotated[List[str] | None, Query()] = None):
 
-    # try:
+    try:
 
         output_forecasts = []
         query_inputs = zip(dates, locations)
@@ -54,8 +54,8 @@ async def get_forecasts(dates: Annotated[List[str] | None, Query()] = None, loca
         
         return output_forecasts
     
-    # except:
-    #     return {"message": "failure"}
+    except:
+        return {"message": "failure"}
 
 
 @app.put("/load/")

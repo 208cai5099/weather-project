@@ -5,6 +5,9 @@ interface StatusBarProps {
     timeZone: string
 }
 
+/**
+ * Indicates whether the data fetch was successful or not
+ */
 export function StatusBar({isFetching, isError, isSuccess, timeZone}: StatusBarProps) {
 
     const handleStatusMessage = ({isFetching, isError, isSuccess, timeZone}: StatusBarProps) => {
@@ -33,7 +36,7 @@ export function StatusBar({isFetching, isError, isSuccess, timeZone}: StatusBarP
     }
 
     return (
-        <div className="update-notice">
+        <div className="status-bar">
             <p>
                 {handleStatusMessage({isFetching, isError, isSuccess, timeZone})}
             </p>

@@ -6,8 +6,11 @@ import dotenv from "dotenv"
 
 dotenv.config()
 
-
-async function sendToDatabase(forecastEntryArray: Partial<ForecastEntry>[]) {
+/**
+ * Loads the given array of ForecastEntry objects to a database
+ * @returns A Promise of void 
+ */
+async function sendToDatabase(forecastEntryArray: ForecastEntry[]) {
 
     const endpoint = process.env.DATABASE_LOAD_ENDPOINT as string
 
@@ -40,7 +43,11 @@ async function sendToDatabase(forecastEntryArray: Partial<ForecastEntry>[]) {
 
 }
 
-
+/**
+ * Facilitates the querying of weather data, processing of the data, and loading the 
+ * processed data into the database
+ * @returns A Promise of void
+ */
 async function App() {
 
     try {
@@ -48,7 +55,7 @@ async function App() {
     
         const forecasts = await getWeatherForecasts()
 
-        const output = []
+        const output: ForecastEntry[] = []
         for (const f of forecasts) {
             const completeForecast = await getWeatherDescriptors(f)
             output.push(completeForecast)
@@ -64,7 +71,7 @@ async function App() {
 
 }
 
-
+// run the app
 try {
     await App()
 } catch (error) {

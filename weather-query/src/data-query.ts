@@ -5,7 +5,6 @@ dotenv.config()
 
 /**
  * Sends a GET request to get hourly weather forecasts or half-day forecasts
- * @param {string} type Specifies "half-day" or "hourly" forecasts
  * @returns A Promise of a JSON object of the weather forecasts
  */
 export async function queryWeatherForecast(type: "half-day" | "hourly") {
@@ -41,9 +40,8 @@ export async function queryWeatherForecast(type: "half-day" | "hourly") {
 
 
 /**
- * Parse a ISO-formatted datetime and return the date at a specific time zone
- * @param {string} timestamp 
- * @returns {string}
+ * Parse a ISO-formatted datetime for the date at a specific time zone
+ * @returns The date of the given timestamp
  */
 export function parseISODate(timestamp: string, timeZone: string = "America/New_York"): string {
 
@@ -67,9 +65,7 @@ export function parseISODate(timestamp: string, timeZone: string = "America/New_
 
 /**
  * Parses a JSON object of weather forecast data from a start date to an end date
- * @param {WeatherForecast} rawData 
- * @param {string[]} dateInterval
- * @returns {WeatherPeriod[]} An array of forecast details (temp, wind speed, precipiation prob, etc.) from a start date to an end date
+ * @returns An array of forecast details (temp, wind speed, precipiation prob, etc.) from a start date to an end date
  */
 export function filterDates(rawData: WeatherForecast, dateInterval: string[]): WeatherPeriod[] {
 
@@ -83,9 +79,8 @@ export function filterDates(rawData: WeatherForecast, dateInterval: string[]): W
 
 /**
  * Parses an array of forecast details and creates an array of partial ForecastEntry
- * objects with each date, day of week, temp array, precipitation array, and wind speed array
- * @param {WeatherPeriod[]} periods 
- * @returns {Partial<ForecastEntry>[]} 
+ * objects containing date, day of week, temp array, precipitation array, and wind speed array
+ * @returns An array of partial ForecastEntry objects with daily weather details
  */
 export function parseHourlyForecasts(periods: WeatherPeriod[], timeZone: string = "America/New_York"): Partial<ForecastEntry>[] {
 
@@ -157,8 +152,7 @@ export function parseHourlyForecasts(periods: WeatherPeriod[], timeZone: string 
 /**
  * Parses an array of half-day forecast details and creates an array of partial ForecastEntry
  * objects with forecast descriptions
- * @param {WeatherPeriod[]} periods 
- * @returns {Partial<ForecastEntry>[]} 
+ * @returns An array of partial ForecastEntry objects containing daily weather details
  */
 export function parseHalfDayForecasts(periods: WeatherPeriod[]): Partial<ForecastEntry>[] {
 
@@ -211,9 +205,7 @@ export function parseHalfDayForecasts(periods: WeatherPeriod[]): Partial<Forecas
 
 /**
  * Queries the API for the weather forecasts in the given time range and time zone
- * @param {number} dayInterval The number of days in the time range (default is 5)
- * @param {string} timeZone The time zone (default is America/New York)
- * @returns {Promise<Partial<ForecastEntry>[]>} A Promise of an array of weather forecasts
+ * @returns A Promise of an array of partial ForecastEntry objects containing parsed weather data
  */
 export async function getWeatherForecasts(dayInterval: number = 5, timeZone: string = "America/New_York"): Promise<Partial<ForecastEntry>[]> {
 
