@@ -84,17 +84,6 @@ export function filterDates(rawData: WeatherForecast, dateInterval: string[]): W
  */
 export function parseHourlyForecasts(periods: WeatherPeriod[], timeZone: string = "America/New_York"): Partial<ForecastEntry>[] {
 
-    const DateTimeFormatOptions: Intl.DateTimeFormatOptions = {
-        year: "numeric", 
-        month: "2-digit", 
-        day: "2-digit", 
-        hour: "2-digit", 
-        minute: "2-digit",
-        hour12: false,
-        timeZone: timeZone
-    }
-    const dateTimeFormatter = new Intl.DateTimeFormat("en-CA", DateTimeFormatOptions)
-
     const dayOfWeekMapper: Record<number, "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday"> = {
         0: "Sunday",
         1: "Monday",
@@ -110,8 +99,9 @@ export function parseHourlyForecasts(periods: WeatherPeriod[], timeZone: string 
 
         const recordDate = new Date(record["startTime"])
         const dayOfWeek = dayOfWeekMapper[recordDate.getDay()]
-        const [date, time]  = dateTimeFormatter.format(recordDate).split(", ")
-        const formattedTime = time.replace("p.m.", "PM").replace("a.m.", "AM")
+        const date = `${recordDate.getFullYear()}-${recordDate.getMonth() + 1}-${recordDate.getDate()}`
+        const hour = recordDate.getHours()
+        const formattedTime = hour < 10 ? `0${hour}:00` : `${hour}:00`
         const temperature = record["temperature"]
         const precipitation = record["probabilityOfPrecipitation"]["value"]
         const windSpeedRegexMatch = record["windSpeed"].match(/[\d]+/)
@@ -234,6 +224,7 @@ export async function getWeatherForecasts(dayInterval: number = 5, timeZone: str
     for (const forecast1 of hourlyForecasts) {
         let match = false
         for (const forecast2 of halfDayForecasts) {
+
             if (forecast1.date === forecast2.date) {
                 combinedForecasts.push({...forecast1, ...forecast2})
                 match = true
