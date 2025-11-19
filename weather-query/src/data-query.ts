@@ -216,6 +216,24 @@ export async function getWeatherForecasts(): Promise<Partial<ForecastEntry>[]> {
 
     }
 
+    // if the half day forecasts are not available yet, set them to be empty
+    for (let i = 0; i < combinedForecasts.length; i++) {
+
+        const forecast = combinedForecasts[i]
+        
+        if (!Object.keys(forecast).includes("shortDaytimeForecast")) {
+            forecast["shortDaytimeForecast"] = ""
+            forecast["detailedDaytimeForecast"] = ""
+        }
+
+        if (!Object.keys(forecast).includes("shortNighttimeForecast")) {
+            forecast["shortNighttimeForecast"] = ""
+            forecast["detailedNighttimeForecast"] = ""
+        }
+
+        combinedForecasts[i] = forecast
+    }
+
     return combinedForecasts
 
 }
