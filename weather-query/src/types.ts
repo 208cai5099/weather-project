@@ -9,15 +9,15 @@ export interface WeatherPeriod {
   temperatureTrend: string;
   probabilityOfPrecipitation: {
     unitCode: string;
-    value: number | null;
+    value: number;
   };
   dewpoint?: {
     unitCode: string,
-    value: number | null
+    value: number
   },
   relativeHumidity?: {
     unitCode: string,
-    value: number | null,
+    value: number,
   },
   windSpeed: string;
   windDirection: string;
@@ -52,11 +52,9 @@ export interface ForecastEntry {
   date: string,
   dayOfWeek: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday",
   hourlyForecast: Record<string, string>,
-  hourlyTemp: Record<string, number | null>,
-  hourlyPrecipitation: Record<string, number | null>,
-  hourlyWindSpeed: Record<string, number | null>,
-  lowTemp: number,
-  highTemp: number,
+  hourlyTemp: Record<string, number>,
+  hourlyPrecipitation: Record<string, number>,
+  hourlyWindSpeed: Record<string, number>,
   shortDaytimeForecast: string,
   detailedDaytimeForecast: string,
   shortNighttimeForecast: string,

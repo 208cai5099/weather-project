@@ -29,7 +29,7 @@ export async function queryWeatherForecast(type: "half-day" | "hourly") {
 
         const rawData = await res.json()
 
-        return rawData
+        return rawData as WeatherForecast
 
 
     } catch (error) {
@@ -50,30 +50,23 @@ export function parseISODate(timestamp: string, timeZone: string = "America/New_
         year: "numeric", 
         month: "2-digit", 
         day: "2-digit", 
-        hour: "numeric", 
-        minute: "numeric",
-        hour12: true,
         timeZone: timeZone
     }
     const dateTimeFormatter = new Intl.DateTimeFormat("en-CA", DateTimeFormatOptions)
     const formattedTimestamp = dateTimeFormatter.format(inputDatetime)
+    const date = formattedTimestamp.split(", ")[0]
 
-    const [date, time] =  formattedTimestamp.split(", ")
-    return date as string
+    return date
 
 }
 
 /**
- * Parses a JSON object of weather forecast data from a start date to an end date
- * @returns An array of forecast details (temp, wind speed, precipiation prob, etc.) from a start date to an end date
+ * Parses an unprocessed API JSON response for only the forecast details
+ * @returns An array of forecast details (temp, wind speed, precipiation prob, etc.)
  */
-export function filterDates(rawData: WeatherForecast, dateInterval: string[]): WeatherPeriod[] {
-
-    const periods = rawData["properties"]["periods"].filter((record: WeatherPeriod) => 
-        dateInterval.includes(parseISODate(record["startTime"])) || dateInterval.includes(parseISODate(record["endTime"]))
-    )
-
-    return periods
+export function filterForWeatherPeriods(rawData: WeatherForecast): WeatherPeriod[] {
+    
+    return rawData["properties"]["periods"]
 
 }
 
@@ -104,8 +97,8 @@ export function parseHourlyForecasts(periods: WeatherPeriod[]): Partial<Forecast
         const formattedTime = hour < 10 ? `0${hour}:00` : `${hour}:00`
         const temperature = record["temperature"]
         const precipitation = record["probabilityOfPrecipitation"]["value"]
-        const windSpeedRegexMatch = record["windSpeed"].match(/[\d]+/)
-        const windSpeed = windSpeedRegexMatch ? parseInt(windSpeedRegexMatch[0]) : null
+        const windSpeedRegexMatch = record["windSpeed"].match(/[\d]+/) as RegExpMatchArray
+        const windSpeed = parseInt(windSpeedRegexMatch[0])
         const shortForecast = record["shortForecast"]
 
         const forecastIndex = weatherForecastArray.findIndex((forecast) => forecast.date === date)
@@ -117,9 +110,7 @@ export function parseHourlyForecasts(periods: WeatherPeriod[]): Partial<Forecast
                 hourlyForecast: {[formattedTime]: shortForecast},
                 hourlyTemp: {[formattedTime] : temperature},
                 hourlyPrecipitation: {[formattedTime]: precipitation},
-                hourlyWindSpeed: {[formattedTime]: windSpeed},
-                lowTemp: temperature,
-                highTemp: temperature
+                hourlyWindSpeed: {[formattedTime]: windSpeed}
             })
         } else {
             const entry = weatherForecastArray[forecastIndex] as Partial<ForecastEntry>
@@ -127,8 +118,6 @@ export function parseHourlyForecasts(periods: WeatherPeriod[]): Partial<Forecast
             entry.hourlyTemp = {...entry.hourlyTemp, [formattedTime]: temperature}
             entry.hourlyPrecipitation = {...entry.hourlyPrecipitation, [formattedTime]: precipitation}
             entry.hourlyWindSpeed = {...entry.hourlyWindSpeed, [formattedTime]: windSpeed}
-            entry.lowTemp = Math.min(temperature, entry.lowTemp as number)
-            entry.highTemp = Math.max(temperature, entry.highTemp as number)
             weatherForecastArray[forecastIndex] = entry
         }
 
@@ -147,6 +136,7 @@ export function parseHourlyForecasts(periods: WeatherPeriod[]): Partial<Forecast
 export function parseHalfDayForecasts(periods: WeatherPeriod[]): Partial<ForecastEntry>[] {
 
     const weatherForecastArray: Partial<ForecastEntry>[] = []
+
     periods.forEach((record) => {
 
         const index = weatherForecastArray.findIndex((element) => element["date"] === parseISODate(record["startTime"]))
@@ -192,52 +182,40 @@ export function parseHalfDayForecasts(periods: WeatherPeriod[]): Partial<Forecas
 
 }
 
-
 /**
  * Queries the API for the weather forecasts in the given time range and time zone
  * @returns A Promise of an array of partial ForecastEntry objects containing parsed weather data
  */
-export async function getWeatherForecasts(dayInterval: number = 6, timeZone: string = "America/New_York"): Promise<Partial<ForecastEntry>[]> {
+export async function getWeatherForecasts(): Promise<Partial<ForecastEntry>[]> {
+
+    const combinedForecasts: Partial<ForecastEntry>[] = []
 
     const halfDayJSON = await queryWeatherForecast("half-day")
     const hourlyJSON = await queryWeatherForecast("hourly")
 
-    const dateFormatOptions: Intl.DateTimeFormatOptions = {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        timeZone: timeZone
-    }
-    const dateFormatter = new Intl.DateTimeFormat("en-CA", dateFormatOptions)
-    
-    const currentDate = new Date()
-    const dateInterval: string[] = []
-    for (let i = 0; i < dayInterval + 1; i++) {
-        const targetDate = new Date(currentDate.getTime() + i * 24 * 60 * 60 * 1000)
-        dateInterval.push(dateFormatter.format(targetDate))
-    }
+    if (halfDayJSON && hourlyJSON) {
 
-    const hourlyForecasts = parseHourlyForecasts(filterDates(hourlyJSON, dateInterval))
-    const halfDayForecasts = parseHalfDayForecasts(filterDates(halfDayJSON, dateInterval))
+        const hourlyForecasts = parseHourlyForecasts(filterForWeatherPeriods(hourlyJSON))
+        const halfDayForecasts = parseHalfDayForecasts(filterForWeatherPeriods(halfDayJSON))
 
-    const combinedForecasts: Partial<ForecastEntry>[] = []
-    for (const forecast1 of hourlyForecasts) {
-        let match = false
-        for (const forecast2 of halfDayForecasts) {
+        for (const forecast1 of hourlyForecasts) {
+            let match = false
+            for (const forecast2 of halfDayForecasts) {
 
-            if (forecast1.date === forecast2.date) {
-                combinedForecasts.push({...forecast1, ...forecast2})
-                match = true
-                break
+                if (forecast1.date === forecast2.date) {
+                    combinedForecasts.push({...forecast1, ...forecast2})
+                    match = true
+                    break
+                }
+            }
+
+            if (!match) {
+                combinedForecasts.push(forecast1)
             }
         }
 
-        if (!match) {
-            combinedForecasts.push(forecast1)
-        }
     }
 
     return combinedForecasts
-
 
 }

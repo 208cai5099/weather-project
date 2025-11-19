@@ -111,8 +111,7 @@ function determineUmbrella(descriptor: string) {
 }
 
 /**
- * Re-formats the data in a given ForecastEntry object for display
- * in one of the 5-day Weather Cards
+ * Re-formats the data in the given ForecastEntry object for display
  * @returns A WeatherForecast object representing a single day's forecast info
  */
 export function parseWeatherForecast(forecastEntry: ForecastEntry) {
@@ -120,8 +119,8 @@ export function parseWeatherForecast(forecastEntry: ForecastEntry) {
     const weatherForecast: Partial<WeatherForecast> = {}
     weatherForecast["date"] = forecastEntry["date"].split("-")[1] + "/" + forecastEntry["date"].split("-")[2]
     weatherForecast["dayOfWeek"] = forecastEntry["dayOfWeek"]
-    weatherForecast["lowTemp"] = forecastEntry["lowTemp"]
-    weatherForecast["highTemp"] = forecastEntry["highTemp"]
+    weatherForecast["lowTemp"] = Math.min(...Object.values(forecastEntry["hourlyTemperature"]))
+    weatherForecast["highTemp"] = Math.max(...Object.values(forecastEntry["hourlyTemperature"]))
     weatherForecast["daytimeForecast"] = {
         forecast: forecastEntry["daytimeWeatherDescriptor"],
         svgPath: determineSVG(forecastEntry["daytimeWeatherDescriptor"].toLowerCase()),

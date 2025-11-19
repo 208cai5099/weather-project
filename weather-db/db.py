@@ -3,8 +3,6 @@ import json
 
 WEATHER_DB_SCHEMA = "weather_db_schema.json"
 WEATHER_DB_NAME = "weather.db"
-WEATHER_DB_HOURLY_TABLES = ["hourly_temperature", "hourly_precipitation", "hourly_wind_speed"]
-
 
 def create_table(db_cursor, table_name, columns):
     """
@@ -23,6 +21,10 @@ def create_table(db_cursor, table_name, columns):
     for column_name, constraints in columns.items():
         column_specs.append(f"\n{column_name} {constraints}")
     column_specs = ",".join(column_specs)
+
+    # use a composite unique constraint (useful for updating hourly data)
+    if "hourly_" in table_name:
+        column_specs += ",\nUNIQUE (location, date, time)"
 
     query = f"CREATE TABLE IF NOT EXISTS {table_name} ({column_specs});"
     db_cursor.execute(query)
@@ -78,10 +80,7 @@ def update_forecast(new_forecast, db_name=WEATHER_DB_NAME):
     """
 
     date = new_forecast["date"]
-    day_of_week = new_forecast["dayOfWeek"]
     location = new_forecast["location"]
-    low_temp = new_forecast["lowTemp"]
-    high_temp = new_forecast["highTemp"]
     short_daytime_forecast = new_forecast["shortDaytimeForecast"]
     detailed_daytime_forecast = new_forecast["detailedDaytimeForecast"]
     short_nighttime_forecast = new_forecast["shortNighttimeForecast"]
@@ -92,34 +91,27 @@ def update_forecast(new_forecast, db_name=WEATHER_DB_NAME):
     db_con = sqlite3.connect(db_name)
     db_cur = db_con.cursor()
 
-    ## update the high-level forecast information
-    query = (
-        "UPDATE forecast_summary\n"
-        f"SET location='{location}', date='{date}', day_of_week='{day_of_week}', low_temp={low_temp}, high_temp={high_temp}\n"
-        f"WHERE location='{location}' AND date='{date}';"
-    )
-
-    db_cur.execute(query)
-    
+    ## only update the daytime forecast if it is not empty
     if detailed_daytime_forecast != "" and short_daytime_forecast != "" and daytime_weather_descriptor != "":
 
         query = (
             "UPDATE forecast_summary\n"
-            f"SET short_daytime_forecast='{short_daytime_forecast}', detailed_daytime_forecast='{detailed_daytime_forecast}', daytime_weather_descriptor='{daytime_weather_descriptor}'\n"
-            f"WHERE location='{location}' AND date='{date}';"
+            f"SET short_daytime_forecast = ?, detailed_daytime_forecast = ?, daytime_weather_descriptor = ?\n"
+            f"WHERE location = ? AND date = ?;"
         )
 
-        db_cur.execute(query)
-    
+        db_cur.execute(query, (short_daytime_forecast, detailed_daytime_forecast, daytime_weather_descriptor, location, date))
+
+    ## only update the nighttime forecast if it is not empty
     if detailed_nighttime_forecast != "" and short_nighttime_forecast != "" and nighttime_weather_descriptor != "":
 
         query = (
             "UPDATE forecast_summary\n"
-            f"SET short_nighttime_forecast='{short_nighttime_forecast}', detailed_nighttime_forecast='{detailed_nighttime_forecast}', nighttime_weather_descriptor='{nighttime_weather_descriptor}'\n"
-            f"WHERE location='{location}' AND date='{date}';"
+            f"SET short_nighttime_forecast = ?, detailed_nighttime_forecast = ?, nighttime_weather_descriptor = ?\n"
+            f"WHERE location = ? AND date = ?;"
         )
 
-        db_cur.execute(query)
+        db_cur.execute(query, (short_nighttime_forecast, detailed_nighttime_forecast, nighttime_weather_descriptor, location, date))
 
     ## update the hourly forecast, temperature, precipitation, and wind speed data
     for hourly_type in ["hourlyForecast", "hourlyTemp", "hourlyPrecipitation", "hourlyWindSpeed"]:
@@ -133,12 +125,13 @@ def update_forecast(new_forecast, db_name=WEATHER_DB_NAME):
             for time, forecast in hourly_data.items():
 
                 query = (
-                    f"UPDATE {table_name}\n"
-                    f"SET forecast='{forecast}'\n"
-                    f"WHERE location='{location}' AND date='{date}' AND time='{time}';"
+                    f"INSERT INTO {table_name} (location, date, time, forecast)\n"
+                    f"VALUES (?, ?, ?, ?)\n"
+                    f"ON CONFLICT (location, date, time) DO UPDATE SET\n"
+                    f"forecast=EXCLUDED.forecast;"
                 )
 
-                db_cur.execute(query)
+                db_cur.execute(query, (location, date, time, forecast))
 
         else:
 
@@ -152,12 +145,13 @@ def update_forecast(new_forecast, db_name=WEATHER_DB_NAME):
             for time, value in hourly_data.items():
                 
                 query = (
-                    f"UPDATE {table_name}\n"
-                    f"SET value={value}\n"
-                    f"WHERE location='{location}' AND date='{date}' AND time='{time}'"
+                    f"INSERT INTO {table_name} (location, date, time, value)\n"
+                    f"VALUES (?, ?, ?, ?)\n"
+                    f"ON CONFLICT (location, date, time) DO UPDATE SET\n"
+                    f"value=EXCLUDED.value;"
                 )
 
-                db_cur.execute(query)
+                db_cur.execute(query, (location, date, time, value))
 
     db_con.commit()
     db_cur.close()
@@ -180,8 +174,6 @@ def insert_forecast(new_forecast, db_name=WEATHER_DB_NAME):
     hourly_temp = new_forecast["hourlyTemp"]
     hourly_precipitation = new_forecast["hourlyPrecipitation"]
     hourly_wind_speed = new_forecast["hourlyWindSpeed"]
-    low_temp = new_forecast["lowTemp"]
-    high_temp = new_forecast["highTemp"]
     short_daytime_forecast = new_forecast["shortDaytimeForecast"]
     detailed_daytime_forecast = new_forecast["detailedDaytimeForecast"]
     short_nighttime_forecast = new_forecast["shortNighttimeForecast"]
@@ -194,29 +186,28 @@ def insert_forecast(new_forecast, db_name=WEATHER_DB_NAME):
 
     ## insert an entry of high-level forecast info
     summary_query = (
-        "INSERT INTO forecast_summary (location, date, day_of_week, low_temp, high_temp, "
+        "INSERT INTO forecast_summary (location, date, day_of_week, "
         "short_daytime_forecast, detailed_daytime_forecast, short_nighttime_forecast, detailed_nighttime_forecast, "
         "daytime_weather_descriptor, nighttime_weather_descriptor)\n"
-        f"VALUES ('{location}', '{date}', '{day_of_week}', {low_temp}, {high_temp}, '{short_daytime_forecast}', '{detailed_daytime_forecast}', "
-        f"'{short_nighttime_forecast}', '{detailed_nighttime_forecast}', '{daytime_weather_descriptor}', '{nighttime_weather_descriptor}');"
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);"
     )
-    db_cur.execute(summary_query)
+    db_cur.execute(summary_query, (location, date, day_of_week, short_daytime_forecast, detailed_daytime_forecast, short_nighttime_forecast, detailed_nighttime_forecast, daytime_weather_descriptor, nighttime_weather_descriptor))
 
     ## insert the hourly forecast predictions
-    forecast_data = [f"('{location}', '{date}', '{time}', '{forecast}')" for time, forecast in hourly_forecast.items()]
-    db_cur.execute(f"INSERT INTO hourly_forecast (location, date, time, forecast)\nVALUES {",\n".join(forecast_data)};")
+    forecast_data = [(location, date, time, forecast) for time, forecast in hourly_forecast.items()]
+    db_cur.executemany(f"INSERT INTO hourly_forecast (location, date, time, forecast)\nVALUES (?, ?, ?, ?);", forecast_data)
 
     ## insert the hourly temperature forecast readings
-    temp_data = [f"('{location}', '{date}', '{time}', {value})" for time, value in hourly_temp.items()]
-    db_cur.execute(f"INSERT INTO hourly_temperature (location, date, time, value)\nVALUES {",\n".join(temp_data)};")
+    temp_data = [(location, date, time, value) for time, value in hourly_temp.items()]
+    db_cur.executemany(f"INSERT INTO hourly_temperature (location, date, time, value)\nVALUES (?, ?, ?, ?);", temp_data)
 
     ## insert the hourly precipitation forecast readings
-    precipitation_data = [f"('{location}', '{date}', '{time}', {value})" for time, value in hourly_precipitation.items()]
-    db_cur.execute(f"INSERT INTO hourly_precipitation (location, date, time, value)\nVALUES {",\n".join(precipitation_data)};")
+    precipitation_data = [(location, date, time, value) for time, value in hourly_precipitation.items()]
+    db_cur.executemany(f"INSERT INTO hourly_precipitation (location, date, time, value)\nVALUES (?, ?, ?, ?);", precipitation_data)
 
     ## insert the hourly wind speed forecast readings
-    wind_speed_data = [f"('{location}', '{date}', '{time}', {value})" for time, value in hourly_wind_speed.items()]
-    db_cur.execute(f"INSERT INTO hourly_wind_speed (location, date, time, value)\nVALUES {",\n".join(wind_speed_data)};")
+    wind_speed_data = [(location, date, time, value) for time, value in hourly_wind_speed.items()]
+    db_cur.executemany(f"INSERT INTO hourly_wind_speed (location, date, time, value)\nVALUES (?, ?, ?, ?);", wind_speed_data)
 
     db_con.commit()
     db_cur.close()
@@ -239,13 +230,14 @@ def forecast_entry_already_exists(date, location, db_name=WEATHER_DB_NAME):
     query = (
         f"SELECT date, location\n"
         f"FROM forecast_summary\n"
-        f"WHERE date = '{date}' AND location = '{location}';"
+        f"WHERE date = ? AND location = ?;"
     )
 
-    res = db_cur.execute(query)
+    res = db_cur.execute(query, (date, location))
 
     output = False if res.fetchone() is None else True
 
+    db_con.commit()
     db_cur.close()
     db_con.close()
 
@@ -288,25 +280,23 @@ def query_forecast(date, location, db_name=WEATHER_DB_NAME):
         db_cur = db_con.cursor()
 
         summary_query = (
-            "SELECT day_of_week, low_temp, high_temp, short_daytime_forecast, detailed_daytime_forecast, "
+            "SELECT day_of_week, short_daytime_forecast, detailed_daytime_forecast, "
             "short_nighttime_forecast, detailed_nighttime_forecast, daytime_weather_descriptor, nighttime_weather_descriptor\n"
             "FROM forecast_summary\n"
-            f"WHERE date='{date}' AND location='{location}';"
+            f"WHERE date = ? AND location = ?;"
         )
         
-        summary = db_cur.execute(summary_query)
+        summary = db_cur.execute(summary_query, (date, location))
         summary = summary.fetchone()
         forecast_output["location"] = location
         forecast_output["date"] = date
         forecast_output["dayOfWeek"] = summary[0]
-        forecast_output["lowTemp"] = summary[1]
-        forecast_output["highTemp"] = summary[2]
-        forecast_output["shortDaytimeForecast"] = summary[3]
-        forecast_output["detailedDaytimeForecast"] = summary[4]
-        forecast_output["shortNighttimeForecast"] = summary[5]
-        forecast_output["detailedNighttimeForecast"] = summary[6]
-        forecast_output["daytimeWeatherDescriptor"] = summary[7]
-        forecast_output["nighttimeWeatherDescriptor"] = summary[8]
+        forecast_output["shortDaytimeForecast"] = summary[1]
+        forecast_output["detailedDaytimeForecast"] = summary[2]
+        forecast_output["shortNighttimeForecast"] = summary[3]
+        forecast_output["detailedNighttimeForecast"] = summary[4]
+        forecast_output["daytimeWeatherDescriptor"] = summary[5]
+        forecast_output["nighttimeWeatherDescriptor"] = summary[6]
 
         for hourly_table in ["forecast", "temperature", "precipitation", "wind_speed"]:
 
@@ -316,16 +306,16 @@ def query_forecast(date, location, db_name=WEATHER_DB_NAME):
                 hourly_query = (
                     f"SELECT time, forecast\n"
                     f"FROM {table_name}\n"
-                    f"WHERE date='{date}' AND location='{location}'"
+                    f"WHERE date = ? AND location = ?;"
                 )                
             else:
                 hourly_query = (
                     f"SELECT time, value\n"
                     f"FROM {table_name}\n"
-                    f"WHERE date='{date}' AND location='{location}'"
+                    f"WHERE date = ? AND location = ?;"
                 )
 
-            hourly_data = db_cur.execute(hourly_query)
+            hourly_data = db_cur.execute(hourly_query, (date, location))
             hourly_data = hourly_data.fetchall()
 
             if hourly_table == "forecast":

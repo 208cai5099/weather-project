@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 from pydantic import BaseModel
 from typing import Literal, Dict, List, Union, Annotated
 from fastapi import FastAPI, Query
@@ -5,6 +6,7 @@ import os
 from db import query_forecast, add_new_forecast, db_setup, WEATHER_DB_NAME, WEATHER_DB_SCHEMA
 from fastapi.middleware.cors import CORSMiddleware
 
+load_dotenv()
 
 if not os.path.isfile(WEATHER_DB_NAME):
     db_setup(WEATHER_DB_SCHEMA, WEATHER_DB_NAME)
@@ -21,8 +23,6 @@ class ForecastEntry(BaseModel):
     hourlyTemp: Dict[str, Union[int, None]]
     hourlyPrecipitation: Dict[str, Union[int, None]]
     hourlyWindSpeed: Dict[str, Union[int, None]]
-    lowTemp: int
-    highTemp: int
     shortDaytimeForecast: str
     detailedDaytimeForecast: str
     shortNighttimeForecast: str
@@ -31,12 +31,13 @@ class ForecastEntry(BaseModel):
     nighttimeWeatherDescriptor: str
 
 app = FastAPI()
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],        # Allow all origins
-    allow_credentials=True,
-    allow_methods=["*"],        # Allow all methods (GET, POST, etc.)
-    allow_headers=["*"],        # Allow all headers
+    allow_origins=os.getenv("CORS_ALLOWED_ORIGINS").split(","),
+    allow_credentials=False,
+    allow_methods=["GET", "PUT"],
+    allow_headers=["*"],
 )
 
 @app.get("/query/")
