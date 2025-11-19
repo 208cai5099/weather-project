@@ -2,7 +2,7 @@ import { getWeatherDescriptors } from "./data-processing.js"
 import { getWeatherForecasts } from "./data-query.js"
 import { ForecastEntry } from "./types.js"
 import dotenv from "dotenv"
-import fs from "fs/promises"
+// import fs from "fs/promises"
 
 
 dotenv.config()
@@ -61,9 +61,7 @@ async function App() {
             output.push(completeForecast)
         }
 
-        await fs.writeFile("test.json", JSON.stringify(output, null, 4))
-
-        // await sendToDatabase(output)
+        await sendToDatabase(output)
 
     } catch (error) {
 
