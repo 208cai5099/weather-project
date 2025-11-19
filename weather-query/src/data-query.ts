@@ -82,7 +82,7 @@ export function filterDates(rawData: WeatherForecast, dateInterval: string[]): W
  * objects containing date, day of week, temp array, precipitation array, and wind speed array
  * @returns An array of partial ForecastEntry objects with daily weather details
  */
-export function parseHourlyForecasts(periods: WeatherPeriod[], timeZone: string = "America/New_York"): Partial<ForecastEntry>[] {
+export function parseHourlyForecasts(periods: WeatherPeriod[]): Partial<ForecastEntry>[] {
 
     const dayOfWeekMapper: Record<number, "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday"> = {
         0: "Sunday",
@@ -197,7 +197,7 @@ export function parseHalfDayForecasts(periods: WeatherPeriod[]): Partial<Forecas
  * Queries the API for the weather forecasts in the given time range and time zone
  * @returns A Promise of an array of partial ForecastEntry objects containing parsed weather data
  */
-export async function getWeatherForecasts(dayInterval: number = 5, timeZone: string = "America/New_York"): Promise<Partial<ForecastEntry>[]> {
+export async function getWeatherForecasts(dayInterval: number = 6, timeZone: string = "America/New_York"): Promise<Partial<ForecastEntry>[]> {
 
     const halfDayJSON = await queryWeatherForecast("half-day")
     const hourlyJSON = await queryWeatherForecast("hourly")
