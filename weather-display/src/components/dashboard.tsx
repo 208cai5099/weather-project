@@ -32,8 +32,7 @@ export function Dashboard() {
 
             return forecastData as ForecastEntry[]
         },
-        staleTime: 30 * 60 * 1000,
-        gcTime: 45 * 60 * 1000
+        refetchInterval: 1 * 60 * 1000
     })
 
     if (error) {
