@@ -92,7 +92,7 @@ export function parseHourlyForecasts(periods: WeatherPeriod[]): Partial<Forecast
 
         const recordDate = new Date(record["startTime"])
         const dayOfWeek = dayOfWeekMapper[recordDate.getDay()]
-        const date = `${recordDate.getFullYear()}-${recordDate.getMonth() + 1}-${recordDate.getDate()}`
+        const date = `${recordDate.getFullYear()}-${recordDate.getMonth() + 1}-${recordDate.getDate() < 10 ? "0" + recordDate.getDate().toString() : recordDate.getDate()}`
         const hour = recordDate.getHours()
         const formattedTime = hour < 10 ? `0${hour}:00` : `${hour}:00`
         const temperature = record["temperature"]

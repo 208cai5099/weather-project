@@ -4,8 +4,6 @@
         "location" : "TEXT NOT NULL",
         "date" : "TEXT NOT NULL",
         "day_of_week" : "TEXT NOT NULL",
-        "low_temp" : "INTEGER",
-        "high_temp" : "INTEGER",
         "short_daytime_forecast" : "TEXT",
         "detailed_daytime_forecast" : "TEXT",
         "short_nighttime_forecast" : "TEXT",
