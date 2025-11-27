@@ -75,7 +75,7 @@ function determineSVG(descriptor: string) {
         return snowyIcon
     } else if (descriptor.includes("rain")) {
         return rainyIcon
-    } else if (descriptor.includes("thuderstorm")) {
+    } else if (descriptor.includes("thunderstorm")) {
         return thunderstormIcon
     } else if (descriptor.includes("windy")) {
         return windyIcon
