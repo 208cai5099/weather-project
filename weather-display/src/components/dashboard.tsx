@@ -20,7 +20,7 @@ export function Dashboard() {
     const [currentWeather, setCurrentWeather] = useState<CurrentWeather | null>(null)
     const [todayForecast, setTodayForecast] = useState<WeatherForecast | null>(null)
     const [allChartData, setAllChartData] = useState<WeatherChartData | null>(null)
-    const [fiveDayWeatherForecast, setFiveDayWeatherForecast] = useState<WeatherForecast[] | null>(null)
+    const [multiDayWeatherForecast, setMultiDayWeatherForecast] = useState<WeatherForecast[] | null>(null)
 
     const { isFetching, isError, isSuccess, data, error } = useQuery({
         queryKey: ["get", {days: DEFAULT_DAYS, location: DEFAULT_LOCATION, timeZone: DEFAULT_TIMEZONE}],
@@ -46,7 +46,16 @@ export function Dashboard() {
             setCurrentWeather(parseCurrentWeather(data[0]))
             setTodayForecast(parseWeatherForecast(data[0]))
             setAllChartData(parseHourlyData(data[0]))
-            setFiveDayWeatherForecast(data.slice(1, 6).map(((singleDayData) => parseWeatherForecast(singleDayData))))
+
+            const multiDayForecasts = []
+            for (const forecast of data.slice(1, )) {
+                if (multiDayForecasts.length < 5) {
+                    multiDayForecasts.push(parseWeatherForecast(forecast))
+                } else {
+                    break
+                }
+            }
+            setMultiDayWeatherForecast(multiDayForecasts)
         }
 
     }, [data])
@@ -60,7 +69,7 @@ export function Dashboard() {
             </div>
             <div className="five-day-forecast-row">
             {
-                fiveDayWeatherForecast?.map((forecastObject, idx) => <WeatherCard forecast={forecastObject} key={`weather-card-${idx}`}/>)
+                multiDayWeatherForecast?.map((forecastObject, idx) => <WeatherCard forecast={forecastObject} key={`weather-card-${idx}`}/>)
             }
             </div>
         </div>

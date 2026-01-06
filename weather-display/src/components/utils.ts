@@ -65,7 +65,7 @@ export async function queryWeatherDB(dayInterval: number, location: string, time
  * Determines the SVG that best corresponds to the given weather descriptor
  * @returns The string representing the SVG
  */
-function determineSVG(descriptor: string) {
+function determineSVG(descriptor: string, timeOfDay: "day" | "night") {
 
     if (descriptor.includes("fog")) {
         return foggyIcon
@@ -86,9 +86,7 @@ function determineSVG(descriptor: string) {
         if (descriptor.includes("partly")) return partlyCloudyIcon
         else return cloudyIcon
     } else if (descriptor.includes("clear")) {
-        const currentDatetime = new Date()
-        const isDaytime = currentDatetime.getHours() >= 6 && currentDatetime.getHours() <= 18 ? true : false
-        if (isDaytime) {
+        if (timeOfDay === "day") {
             if (descriptor.includes("partly")) return partlyCloudyIcon
             else return sunnyIcon
         } else {
@@ -123,12 +121,12 @@ export function parseWeatherForecast(forecastEntry: ForecastEntry) {
     weatherForecast["highTemp"] = Math.max(...Object.values(forecastEntry["hourlyTemperature"]))
     weatherForecast["daytimeForecast"] = {
         forecast: forecastEntry["daytimeWeatherDescriptor"],
-        svgPath: determineSVG(forecastEntry["daytimeWeatherDescriptor"].toLowerCase()),
+        svgPath: determineSVG(forecastEntry["daytimeWeatherDescriptor"].toLowerCase(), "day"),
         needUmbrella: determineUmbrella(forecastEntry["daytimeWeatherDescriptor"].toLowerCase())
     }
     weatherForecast["nighttimeForecast"] = {
         forecast: forecastEntry["nighttimeWeatherDescriptor"],
-        svgPath: determineSVG(forecastEntry["nighttimeWeatherDescriptor"].toLowerCase()),
+        svgPath: determineSVG(forecastEntry["nighttimeWeatherDescriptor"].toLowerCase(), "night"),
         needUmbrella: determineUmbrella(forecastEntry["nighttimeWeatherDescriptor"].toLowerCase())
     }
 
@@ -142,10 +140,13 @@ export function parseWeatherForecast(forecastEntry: ForecastEntry) {
  */
 export function parseCurrentWeather(forecastEntry: ForecastEntry) {
 
-    let currentHour = new Date().getHours().toString() + ":00"
+    const hour = new Date().getHours()
+    let currentHour = hour.toString() + ":00"
     if (new Date().getHours() < 10) {
         currentHour = "0" + currentHour
     }
+
+    const timeOfDay = hour >= 7 && hour <= 18 ? "day" : "night"
 
     const currentWeather: Partial<CurrentWeather> = {}
     currentWeather["location"] = forecastEntry["location"]
@@ -153,7 +154,7 @@ export function parseCurrentWeather(forecastEntry: ForecastEntry) {
     currentWeather["precipitationProb"] = forecastEntry["hourlyPrecipitation"][currentHour]
     currentWeather["windSpeed"] = forecastEntry["hourlyWindSpeed"][currentHour]
     currentWeather["forecast"] = forecastEntry["hourlyForecast"][currentHour]
-    currentWeather["svgPath"] = determineSVG(forecastEntry["hourlyForecast"][currentHour].toLowerCase())
+    currentWeather["svgPath"] = determineSVG(forecastEntry["hourlyForecast"][currentHour].toLowerCase(), timeOfDay)
     currentWeather["needUmbrella"] = determineUmbrella(forecastEntry["hourlyForecast"][currentHour].toLowerCase())
 
     return currentWeather as CurrentWeather
